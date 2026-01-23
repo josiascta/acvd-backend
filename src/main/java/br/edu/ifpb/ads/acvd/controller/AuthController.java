@@ -1,0 +1,43 @@
+package br.edu.ifpb.ads.acvd.controller;
+
+import br.edu.ifpb.ads.acvd.service.TokenService;
+import br.edu.ifpb.ads.acvd.entity.User;
+import br.edu.ifpb.ads.acvd.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+@RestController
+@RequestMapping("/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final UserRepository userRepository;
+    private final TokenService tokenService;
+
+    @PostMapping("/complete-register")
+    public ResponseEntity<LoginResponse> completeRegister(@RequestBody RegisterDTO dto) {
+
+        User user = userRepository.findByEmail(dto.email())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado via Google"));
+
+        if (user.getMatricula() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário já possui cadastro completo.");
+        }
+
+        user.setMatricula(dto.matricula());
+        userRepository.save(user);
+
+        String token = tokenService.generateToken(user);
+
+        return ResponseEntity.ok(new LoginResponse(token));
+    }
+
+    public record RegisterDTO(String email, String matricula) {}
+    public record LoginResponse(String token) {}
+}
