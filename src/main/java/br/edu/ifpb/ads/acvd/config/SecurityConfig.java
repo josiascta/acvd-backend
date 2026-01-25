@@ -54,6 +54,7 @@ public class SecurityConfig {
             OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
             String email = oidcUser.getEmail();
             String nome = oidcUser.getFullName();
+            String picture = oidcUser.getPicture();
 
             Role role;
             if (email.endsWith("@ifpb.edu.br")) {
@@ -65,10 +66,15 @@ public class SecurityConfig {
                 return;
             }
 
-            User user = userRepository.findByEmail(email).orElseGet(() -> {
+            User user = userRepository.findByEmail(email).map(existingUser -> {
+                existingUser.setFotoDePerfil(picture);
+                existingUser.setNome(nome);
+                return userRepository.save(existingUser);
+            }).orElseGet(() -> {
                 User newUser = new User();
                 newUser.setEmail(email);
                 newUser.setNome(nome);
+                newUser.setFotoDePerfil(picture);
                 newUser.setRole(role);
                 return userRepository.save(newUser);
             });

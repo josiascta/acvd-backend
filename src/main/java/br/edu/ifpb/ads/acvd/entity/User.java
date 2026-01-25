@@ -21,6 +21,8 @@ public class User {
 
     private String nome;
 
+    private String fotoDePerfil;
+
     @Column(unique = true)
     private String email;
 
