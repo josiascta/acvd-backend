@@ -34,3 +34,4 @@ build/
 
 app.key
 app.pub
+application.properties
