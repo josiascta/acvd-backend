@@ -18,7 +18,6 @@ target/
 *.iws
 *.iml
 *.ipr
-
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -34,3 +33,4 @@ build/
 
 app.key
 app.pub
+application.properties
