@@ -16,6 +16,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 
 @Configuration
@@ -35,6 +37,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
@@ -54,6 +57,7 @@ public class SecurityConfig {
             OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
             String email = oidcUser.getEmail();
             String nome = oidcUser.getFullName();
+            String picture = oidcUser.getPicture();
 
             Role role;
             if (email.endsWith("@ifpb.edu.br")) {
@@ -65,10 +69,15 @@ public class SecurityConfig {
                 return;
             }
 
-            User user = userRepository.findByEmail(email).orElseGet(() -> {
+            User user = userRepository.findByEmail(email).map(existingUser -> {
+                existingUser.setFotoDePerfil(picture);
+                existingUser.setNome(nome);
+                return userRepository.save(existingUser);
+            }).orElseGet(() -> {
                 User newUser = new User();
                 newUser.setEmail(email);
                 newUser.setNome(nome);
+                newUser.setFotoDePerfil(picture);
                 newUser.setRole(role);
                 return userRepository.save(newUser);
             });
@@ -78,6 +87,17 @@ public class SecurityConfig {
             String targetUrl = "http://localhost:3000/login-success?token=" + token;
 
             response.sendRedirect(targetUrl);
+        };
+    }
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH");
+            }
         };
     }
 }
