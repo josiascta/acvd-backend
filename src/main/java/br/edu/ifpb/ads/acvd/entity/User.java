@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -28,6 +29,18 @@ public class User {
 
     @Column(unique = true)
     private String matricula;
+
+    @Column(nullable = true)
+    private String telefone;
+
+    @Column(nullable = true)
+    private String numeroCpf;
+
+    @Column(nullable = true)
+    private String numeroRg;
+
+    @Column(nullable = true)
+    private Date dataNascimento;
 
     @Enumerated(EnumType.STRING)
     private Role role;

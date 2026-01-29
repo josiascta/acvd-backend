@@ -4,6 +4,9 @@ import br.edu.ifpb.ads.acvd.service.TokenService;
 import br.edu.ifpb.ads.acvd.entity.User;
 import br.edu.ifpb.ads.acvd.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Date;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,7 +33,12 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário já possui cadastro completo.");
         }
 
+        user.setNome(dto.nome());
         user.setMatricula(dto.matricula());
+        user.setNumeroCpf(dto.numeroCpf());
+        user.setNumeroRg(dto.numeroRg());
+        user.setDataNascimento(dto.dataNascimento());
+        
         userRepository.save(user);
 
         String token = tokenService.generateToken(user);
@@ -38,6 +46,6 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponse(token));
     }
 
-    public record RegisterDTO(String email, String matricula) {}
+    public record RegisterDTO(String nome, String email, String matricula, String numeroCpf, String numeroRg, Date dataNascimento) {}
     public record LoginResponse(String token) {}
 }
