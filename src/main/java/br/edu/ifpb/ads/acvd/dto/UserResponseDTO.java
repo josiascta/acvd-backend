@@ -11,6 +11,10 @@ public record UserResponseDTO(UUID id,
                               String fotoDePerfil,
                               String email,
                               String matricula,
+                              String telefone,
+                              String numeroCpf,
+                              String numeroRg,
+                              String curso,
                               Date dataNascimento,
                               Role role) {
     public UserResponseDTO(User user) {
@@ -19,6 +23,10 @@ public record UserResponseDTO(UUID id,
                 user.getFotoDePerfil(),
                 user.getEmail(),
                 user.getMatricula(),
+                user.getTelefone(),
+                user.getNumeroCpf(),
+                user.getNumeroRg(),
+                user.getCurso(),
                 user.getDataNascimento(),
                 user.getRole());
     }
