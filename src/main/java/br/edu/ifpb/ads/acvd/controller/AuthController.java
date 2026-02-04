@@ -37,6 +37,7 @@ public class AuthController {
         user.setNumeroCpf(dto.numeroCpf());
         user.setNumeroRg(dto.numeroRg());
         user.setDataNascimento(dto.dataNascimento());
+        user.setCurso(dto.curso());
 
         userRepository.save(user);
 
@@ -45,6 +46,6 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponse(token));
     }
 
-    public record RegisterDTO(String email, String matricula, String numeroCpf, String numeroRg, Date dataNascimento) {}
+    public record RegisterDTO(String email, String matricula, String numeroCpf, String numeroRg, Date dataNascimento, String curso) {}
     public record LoginResponse(String token) {}
 }
