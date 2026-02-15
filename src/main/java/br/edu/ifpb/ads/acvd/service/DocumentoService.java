@@ -1,7 +1,6 @@
 package br.edu.ifpb.ads.acvd.service;
 
 import br.edu.ifpb.ads.acvd.entity.Documento;
-import br.edu.ifpb.ads.acvd.entity.TipoDocumento;
 import br.edu.ifpb.ads.acvd.entity.User;
 import br.edu.ifpb.ads.acvd.repository.DocumentoRepository;
 import br.edu.ifpb.ads.acvd.repository.UserRepository;
@@ -14,20 +13,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.net.MalformedURLException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.net.MalformedURLException;
+import java.nio.file.*;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -53,9 +47,18 @@ public class DocumentoService {
     }
 
     @Transactional
-    public Documento salvarDocumento(UUID userId, MultipartFile file, TipoDocumento tipo) {
+    public Documento salvarDocumentoDoUsuario(UUID userId, MultipartFile file) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        if (user.getDocumento() != null) {
+            removerDocumentoFisico(user.getDocumento());
+
+            Documento docAntigo = user.getDocumento();
+            user.setDocumento(null);
+            documentoRepository.delete(docAntigo);
+            documentoRepository.flush();
+        }
 
         String originalName = file.getOriginalFilename();
         String fileExtension = "";
@@ -85,7 +88,6 @@ public class DocumentoService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao processar upload", ex);
         }
 
-
         String finalFileName = hashCalculado + fileExtension;
         Path targetLocation = this.fileStorageLocation.resolve(finalFileName);
 
@@ -99,28 +101,33 @@ public class DocumentoService {
         String tamanhoFormatado = formatarTamanho(file.getSize());
 
         Documento documento = new Documento();
-        documento.setTipo(tipo);
         documento.setCaminhoDoArquivo(targetLocation.toString());
         documento.setHash(hashCalculado);
         documento.setTamanho(tamanhoFormatado);
         documento.setNomeOriginal(originalName);
         documento.setDataUpload(LocalDateTime.now());
+
         documento.setUser(user);
+        user.setDocumento(documento);
 
         return documentoRepository.save(documento);
     }
 
-    public List<Documento> listarMeusDocumentos(UUID userId) {
-        return documentoRepository.findByUserUserId(userId);
+    public Documento buscarDocumentoDoUsuario(UUID userId) {
+        return documentoRepository.findByUserUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nenhum documento encontrado para este usuário."));
     }
 
-    public Documento buscarDocumento(UUID docId, UUID userId) {
+    public Documento buscarPorId(UUID docId, UUID userId) {
         Documento doc = documentoRepository.findById(docId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento não encontrado"));
 
-        if (!doc.getUser().getUserId().equals(userId)) {
+        if (doc.getUser() != null && !doc.getUser().getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para acessar este documento");
         }
+
+        // TODO: Futuramente adicionar verificação se o documento é do Responsável Legal do usuário
+
         return doc;
     }
 
@@ -136,6 +143,15 @@ public class DocumentoService {
             }
         } catch (MalformedURLException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro no caminho do arquivo", ex);
+        }
+    }
+
+    private void removerDocumentoFisico(Documento documento) {
+        try {
+            Path filePath = Paths.get(documento.getCaminhoDoArquivo());
+            Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            System.err.println("Erro ao deletar arquivo físico: " + e.getMessage());
         }
     }
 

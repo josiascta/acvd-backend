@@ -61,9 +61,9 @@ public class SecurityConfig {
 
             Role role;
             if (email.endsWith("@ifpb.edu.br")) {
-                role = Role.PROFESSOR;
+                role = Role.SERVIDOR;
             } else if (email.endsWith("@academico.ifpb.edu.br")) {
-                role = Role.ALUNO;
+                role = Role.DISCENTE;
             } else {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN, "Acesso permitido apenas para contas institucionais IFPB.");
                 return;
