@@ -29,10 +29,6 @@ public class AuthController {
         User user = userRepository.findByEmail(dto.email())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado via Google"));
 
-        if (user.getMatricula() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuário já possui cadastro completo.");
-        }
-
         user.setMatricula(dto.matricula());
         user.setNumeroCpf(dto.numeroCpf());
         user.setNumeroRg(dto.numeroRg());

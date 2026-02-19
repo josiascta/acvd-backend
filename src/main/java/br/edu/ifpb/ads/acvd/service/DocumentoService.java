@@ -36,7 +36,6 @@ public class DocumentoService {
                             @Value("${app.upload.dir:uploads}") String uploadDir) {
         this.documentoRepository = documentoRepository;
         this.userRepository = userRepository;
-
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
 
         try {
@@ -46,20 +45,11 @@ public class DocumentoService {
         }
     }
 
+    /**
+     * Processa o upload físico e retorna uma instância de Documento pronta para ser vinculada.
+     */
     @Transactional
-    public Documento salvarDocumentoDoUsuario(UUID userId, MultipartFile file) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
-
-        if (user.getDocumento() != null) {
-            removerDocumentoFisico(user.getDocumento());
-
-            Documento docAntigo = user.getDocumento();
-            user.setDocumento(null);
-            documentoRepository.delete(docAntigo);
-            documentoRepository.flush();
-        }
-
+    public Documento processarUpload(MultipartFile file) {
         String originalName = file.getOriginalFilename();
         String fileExtension = "";
         if (originalName != null && originalName.contains(".")) {
@@ -76,92 +66,96 @@ public class DocumentoService {
                  OutputStream outputStream = Files.newOutputStream(tempFile, StandardOpenOption.WRITE)) {
 
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
-
                 try (DigestInputStream digestInputStream = new DigestInputStream(inputStream, digest)) {
                     digestInputStream.transferTo(outputStream);
                 }
-
                 hashCalculado = bytesToHex(digest.digest());
             }
+
+            String finalFileName = hashCalculado + fileExtension;
+            Path targetLocation = this.fileStorageLocation.resolve(finalFileName);
+            Files.move(tempFile, targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            Documento documento = new Documento();
+            documento.setCaminhoDoArquivo(targetLocation.toString());
+            documento.setHash(hashCalculado);
+            documento.setTamanho(formatarTamanho(file.getSize()));
+            documento.setNomeOriginal(originalName);
+            documento.setDataUpload(LocalDateTime.now());
+
+            return documento;
 
         } catch (IOException | NoSuchAlgorithmException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao processar upload", ex);
         }
+    }
 
-        String finalFileName = hashCalculado + fileExtension;
-        Path targetLocation = this.fileStorageLocation.resolve(finalFileName);
+    @Transactional
+    public Documento salvarDocumentoDoUsuario(UUID userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-        try {
-            Files.move(tempFile, targetLocation, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            try { Files.deleteIfExists(tempFile); } catch (IOException ignored) {}
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao salvar arquivo final", ex);
+        if (user.getDocumento() != null) {
+            removerDocumentoFisico(user.getDocumento());
+            documentoRepository.delete(user.getDocumento());
         }
 
-        String tamanhoFormatado = formatarTamanho(file.getSize());
-
-        Documento documento = new Documento();
-        documento.setCaminhoDoArquivo(targetLocation.toString());
-        documento.setHash(hashCalculado);
-        documento.setTamanho(tamanhoFormatado);
-        documento.setNomeOriginal(originalName);
-        documento.setDataUpload(LocalDateTime.now());
-
+        Documento documento = processarUpload(file);
         documento.setUser(user);
         user.setDocumento(documento);
 
         return documentoRepository.save(documento);
     }
 
-    public Documento buscarDocumentoDoUsuario(UUID userId) {
-        return documentoRepository.findByUserUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nenhum documento encontrado para este usuário."));
-    }
-
-    public Documento buscarPorId(UUID docId, UUID userId) {
-        Documento doc = documentoRepository.findById(docId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento não encontrado"));
-
-        if (doc.getUser() != null && !doc.getUser().getUserId().equals(userId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para acessar este documento");
-        }
-
-        // TODO: Futuramente adicionar verificação se o documento é do Responsável Legal do usuário
-
-        return doc;
-    }
-
     public Resource carregarArquivo(Documento documento) {
         try {
             Path filePath = Paths.get(documento.getCaminhoDoArquivo());
             Resource resource = new UrlResource(filePath.toUri());
-
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo físico não encontrado: " + documento.getNomeOriginal());
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo não encontrado");
             }
         } catch (MalformedURLException ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro no caminho do arquivo", ex);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro no caminho do arquivo");
         }
     }
 
-    private void removerDocumentoFisico(Documento documento) {
+    public void removerDocumentoFisico(Documento documento) {
+        if (documento == null) return;
         try {
-            Path filePath = Paths.get(documento.getCaminhoDoArquivo());
-            Files.deleteIfExists(filePath);
+            Files.deleteIfExists(Paths.get(documento.getCaminhoDoArquivo()));
         } catch (IOException e) {
-            System.err.println("Erro ao deletar arquivo físico: " + e.getMessage());
+            System.err.println("Erro ao deletar arquivo: " + e.getMessage());
         }
+    }
+
+    public Documento buscarDocumentoDoUsuario(UUID userId) {
+        return documentoRepository.findByUserUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    public Documento buscarPorId(UUID docId, UUID userId) {
+        Documento doc = documentoRepository.findById(docId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // Validação de Segurança: O documento pertence ao usuário ou ao seu responsável?
+        boolean isOwner = doc.getUser() != null && doc.getUser().getUserId().equals(userId);
+        boolean isResponsavelOwner = doc.getResponsavelLegal() != null &&
+                doc.getResponsavelLegal().getUser().getUserId().equals(userId);
+
+        if (!isOwner && !isResponsavelOwner) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        return doc;
     }
 
     private String bytesToHex(byte[] hash) {
         StringBuilder hexString = new StringBuilder(2 * hash.length);
         for (byte b : hash) {
             String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
+            if (hex.length() == 1) hexString.append('0');
             hexString.append(hex);
         }
         return hexString.toString();

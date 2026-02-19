@@ -1,8 +1,10 @@
 package br.edu.ifpb.ads.acvd.controller;
 
 import br.edu.ifpb.ads.acvd.dto.UpdateProfileDTO;
+import br.edu.ifpb.ads.acvd.dto.UserCompleteDTO;
 import br.edu.ifpb.ads.acvd.dto.UserResponseDTO;
 import br.edu.ifpb.ads.acvd.repository.UserRepository;
+import br.edu.ifpb.ads.acvd.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +20,16 @@ import java.util.UUID;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final UserService userService;
 
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> getMyProfile(@AuthenticationPrincipal Jwt jwt) {
-        var userId = UUID.fromString(jwt.getSubject());
-        var user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return new ResponseEntity<>(userService.getMyProfile(jwt), HttpStatus.OK);
+    }
 
-        return ResponseEntity.ok(new UserResponseDTO(user));
+    @GetMapping("/meComplete")
+    public ResponseEntity<UserCompleteDTO> getMyProfileComplete(@AuthenticationPrincipal Jwt jwt) {
+        return new ResponseEntity<>(userService.getMyProfileComplete(jwt), HttpStatus.OK);
     }
 
     @PatchMapping("/me")

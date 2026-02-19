@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface DocumentoRepository extends JpaRepository<Documento, UUID> {
     Optional<Documento> findByUserUserId(UUID userId);
+    Optional<Documento> findByResponsavelLegalId(UUID responsavelId);
 }
