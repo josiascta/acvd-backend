@@ -46,6 +46,13 @@ public class UserController {
         userRepository.save(user);
         return ResponseEntity.noContent().build();
     }
+
+    // Deletar após testes
+    @DeleteMapping("/test/email/{email}")
+    public ResponseEntity<Void> deleteUserTemporario(@PathVariable String email) {
+        userService.deleteUserByEmail(email);
+        return ResponseEntity.noContent().build();
+    }
 }
 
 

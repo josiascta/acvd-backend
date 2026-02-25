@@ -41,6 +41,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                        //apagar metodo de delete após testes
+                        .requestMatchers(HttpMethod.DELETE, "/users/test/email/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -60,7 +62,7 @@ public class SecurityConfig {
             String picture = oidcUser.getPicture();
 
             Role role;
-            if (email.endsWith("@ifpb.edu.br")) {
+            if (email.equals("josiasjt3@gmail.com") || email.endsWith("@ifpb.edu.br")) {
                 role = Role.SERVIDOR;
             } else if (email.endsWith("@academico.ifpb.edu.br")) {
                 role = Role.DISCENTE;

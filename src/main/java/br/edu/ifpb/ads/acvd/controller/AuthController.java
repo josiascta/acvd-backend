@@ -1,5 +1,7 @@
 package br.edu.ifpb.ads.acvd.controller;
 
+import br.edu.ifpb.ads.acvd.dto.LoginResponse;
+import br.edu.ifpb.ads.acvd.dto.RegisterDTO;
 import br.edu.ifpb.ads.acvd.service.TokenService;
 import br.edu.ifpb.ads.acvd.entity.User;
 import br.edu.ifpb.ads.acvd.repository.UserRepository;
@@ -30,6 +32,7 @@ public class AuthController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado via Google"));
 
         user.setMatricula(dto.matricula());
+        user.setTelefone(dto.telefone());
         user.setNumeroCpf(dto.numeroCpf());
         user.setNumeroRg(dto.numeroRg());
         user.setDataNascimento(dto.dataNascimento());
@@ -41,7 +44,4 @@ public class AuthController {
 
         return ResponseEntity.ok(new LoginResponse(token));
     }
-
-    public record RegisterDTO(String email, String matricula, String numeroCpf, String numeroRg, Date dataNascimento, String curso) {}
-    public record LoginResponse(String token) {}
 }

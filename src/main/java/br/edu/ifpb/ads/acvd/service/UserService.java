@@ -3,6 +3,7 @@ package br.edu.ifpb.ads.acvd.service;
 import br.edu.ifpb.ads.acvd.dto.UserCompleteDTO;
 import br.edu.ifpb.ads.acvd.dto.UserResponseDTO;
 import br.edu.ifpb.ads.acvd.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,5 +35,16 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         return new UserCompleteDTO(user);
+    }
+
+    // Deletar após testes
+    @Transactional
+    public void deleteUserByEmail(String email) {
+        userRepository.findByEmail(email).ifPresentOrElse(
+                userRepository::delete,
+                () -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado via e-mail fornecido.");
+                }
+        );
     }
 }
