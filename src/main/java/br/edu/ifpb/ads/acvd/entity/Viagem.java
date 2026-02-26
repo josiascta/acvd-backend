@@ -42,6 +42,12 @@ public class Viagem {
     @OneToMany(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Itinerario> itinerarios = new ArrayList<>();
 
+    @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private SolicitacaoColetiva solicitacaoColetiva;
+
+    @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private SolicitacaoIndividual solicitacaoIndividual;
+
     public void addItinerario(Itinerario itinerario) {
         itinerarios.add(itinerario);
         itinerario.setViagem(this);
