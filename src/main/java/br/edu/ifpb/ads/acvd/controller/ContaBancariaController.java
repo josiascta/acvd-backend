@@ -1,6 +1,7 @@
 package br.edu.ifpb.ads.acvd.controller;
 
 import br.edu.ifpb.ads.acvd.dto.ContaBancariaDTO;
+import br.edu.ifpb.ads.acvd.exception.RegraDeNegocioException;
 import br.edu.ifpb.ads.acvd.service.ContaBancariaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class ContaBancariaController {
 
     @PutMapping
     public ResponseEntity<ContaBancariaDTO> salvar(@AuthenticationPrincipal Jwt jwt,
-                                                   @RequestBody ContaBancariaDTO dto) {
+                                                   @RequestBody ContaBancariaDTO dto) throws RegraDeNegocioException {
         UUID userId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(contaBancariaService.atualizarConta(userId, dto));
     }

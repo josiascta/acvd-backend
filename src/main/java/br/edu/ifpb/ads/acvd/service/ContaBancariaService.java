@@ -2,8 +2,11 @@ package br.edu.ifpb.ads.acvd.service;
 
 import br.edu.ifpb.ads.acvd.dto.ContaBancariaDTO;
 import br.edu.ifpb.ads.acvd.entity.ContaBancaria;
+import br.edu.ifpb.ads.acvd.entity.StatusRequisicao;
 import br.edu.ifpb.ads.acvd.entity.User;
+import br.edu.ifpb.ads.acvd.exception.RegraDeNegocioException;
 import br.edu.ifpb.ads.acvd.repository.ContaBancariaRepository;
+import br.edu.ifpb.ads.acvd.repository.RequisicaoRepository;
 import br.edu.ifpb.ads.acvd.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +22,7 @@ public class ContaBancariaService {
 
     private final ContaBancariaRepository contaBancariaRepository;
     private final UserRepository userRepository;
+    private final RequisicaoRepository requisicaoRepository;
 
     public ContaBancariaDTO obter(UUID userId) {
         ContaBancaria conta = contaBancariaRepository.findByUserUserId(userId)
@@ -27,9 +31,15 @@ public class ContaBancariaService {
     }
 
     @Transactional
-    public ContaBancariaDTO atualizarConta(UUID userId, ContaBancariaDTO dto) {
+    public ContaBancariaDTO atualizarConta(UUID userId, ContaBancariaDTO dto) throws RegraDeNegocioException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        // Regra de Negócio: Impede edição se existir requisição aprovada
+        boolean possuiRequisicaoAprovada = requisicaoRepository.existsByDiscenteUserIdAndStatus(userId, StatusRequisicao.APROVADA);
+        if (possuiRequisicaoAprovada) {
+            throw new RegraDeNegocioException("Você não pode editar a conta bancária enquanto possuir uma requisição aprovada em andamento.");
+        }
 
         ContaBancaria conta = contaBancariaRepository.findByUserUserId(userId)
                 .orElse(new ContaBancaria());
