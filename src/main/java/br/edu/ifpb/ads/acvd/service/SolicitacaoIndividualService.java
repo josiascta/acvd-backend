@@ -43,8 +43,8 @@ public class SolicitacaoIndividualService {
 
         try {
             Files.createDirectories(this.fileStorageLocation);
-        } catch (Exception ex) {
-            throw new RuntimeException("Não foi possível criar o diretório de uploads.", ex);
+        } catch (IOException ex) {
+            throw new RuntimeException("Erro ao criar pasta de uploads", ex);
         }
     }
 
@@ -53,80 +53,97 @@ public class SolicitacaoIndividualService {
         Viagem viagem = viagemRepository.findById(dto.viagemId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Viagem não encontrada."));
 
-        // Se já existir uma solicitação individual para essa viagem, exclui o arquivo antigo (opcional dependendo da sua regra)
-        repository.findByViagemId(viagem.getId()).ifPresent(antiga -> {
-            removerDocumentoFisico(antiga.getCaminhoArquivo());
-            repository.delete(antiga);
-            repository.flush();
-        });
+        SolicitacaoIndividual solicitacao = repository.findByViagemId(viagem.getId())
+                .orElse(new SolicitacaoIndividual());
 
         try {
-            // 1. Gerar o PDF com os dados
-            byte[] pdfBytes = pdfService.preencherPdf(dto);
-
-            // 2. Calcular o Hash SHA-256
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(pdfBytes);
-            String hashCalculado = bytesToHex(hashBytes);
-
-            // 3. Salvar o arquivo fisicamente usando o Hash como nome
-            String finalFileName = hashCalculado + ".pdf";
-            Path targetLocation = this.fileStorageLocation.resolve(finalFileName);
-            Files.write(targetLocation, pdfBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-            // 4. Salvar os dados no Banco de Dados
-            SolicitacaoIndividual solicitacao = new SolicitacaoIndividual();
+            // 1. Sincronizar dados da Entity (Anexo II + Anexo V)
             solicitacao.setViagem(viagem);
-            solicitacao.setCaminhoArquivo(targetLocation.toString());
-            solicitacao.setTamanho(formatarTamanho(pdfBytes.length));
-            solicitacao.setHash(hashCalculado);
-            solicitacao.setData(new Date());
-
-            // Dados Específicos
-            solicitacao.setJustificativa(dto.justificativa());
-            solicitacao.setSolicitadoEm(dto.solicitadoEm());
-            solicitacao.setAfastamento(dto.afastamento());
             solicitacao.setNome(dto.nome());
+            solicitacao.setCpf(dto.cpf());
             solicitacao.setMatricula(dto.matricula());
             solicitacao.setCurso(dto.curso());
             solicitacao.setEmail(dto.email());
             solicitacao.setTelefone(dto.telefone());
+            solicitacao.setEndereco(dto.endereco());
+            solicitacao.setBanco(dto.banco());
+            solicitacao.setAgencia(dto.agencia());
+            solicitacao.setConta(dto.conta());
+            solicitacao.setJustificativa(dto.justificativa());
+            solicitacao.setSolicitadoEm(dto.solicitadoEm());
+            solicitacao.setData(new Date());
+
+            // Campos específicos do Anexo V
+            solicitacao.setCampus(dto.campus());
+            solicitacao.setTurmaPeriodo(dto.turmaPeriodo());
+            solicitacao.setAtividadeEvento(dto.atividadeEvento());
+            solicitacao.setLocalidadeEvento(dto.localidadeEvento());
+            solicitacao.setNomeFamiliar(dto.nomeFamiliar());
+            solicitacao.setContatoFamiliar(dto.contatoFamiliar());
+
+            // 2. Gerar os bytes dos dois PDFs
+            byte[] bytesAnexoII = pdfService.preencherAnexoII(dto);
+            byte[] bytesAnexoV = pdfService.preencherAnexoV(dto);
+
+            // 3. Definir caminhos com nomes fixos para permitir edição (sobrescrita)
+            Path pathII = this.fileStorageLocation.resolve(viagem.getId() + "_AnexoII.pdf");
+            Path pathV = this.fileStorageLocation.resolve(viagem.getId() + "_AnexoV.pdf");
+
+            // 4. Gravar no disco (TRUNCATE_EXISTING limpa o arquivo antigo se existir)
+            Files.write(pathII, bytesAnexoII, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(pathV, bytesAnexoV, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+            // 5. Atualizar caminhos e metadados
+            solicitacao.setCaminhoArquivo(pathII.toString());
+            solicitacao.setCaminhoArquivoTermo(pathV.toString());
+            solicitacao.setHash(gerarHash(bytesAnexoII));
+            solicitacao.setTamanho(formatarTamanho(bytesAnexoII.length + bytesAnexoV.length));
 
             return new SolicitacaoIndividualDTO(repository.save(solicitacao));
 
         } catch (IOException | NoSuchAlgorithmException ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao processar e salvar a solicitação", ex);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao processar arquivos", ex);
         }
     }
+
+    // --- NOVOS MÉTODOS ADICIONADOS PARA DOWNLOAD ---
 
     public Resource carregarArquivo(UUID id) {
         SolicitacaoIndividual solicitacao = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
+        return carregarRecurso(solicitacao.getCaminhoArquivo());
+    }
 
+    public Resource carregarArquivoTermo(UUID id) {
+        SolicitacaoIndividual solicitacao = repository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada"));
+        
+        if (solicitacao.getCaminhoArquivoTermo() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo do Termo (Anexo V) não disponível.");
+        }
+        return carregarRecurso(solicitacao.getCaminhoArquivoTermo());
+    }
+
+    private Resource carregarRecurso(String caminho) {
         try {
-            Path filePath = Paths.get(solicitacao.getCaminhoArquivo());
+            Path filePath = Paths.get(caminho);
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
             } else {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo não encontrado fisicamente");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo físico não encontrado.");
             }
         } catch (MalformedURLException ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro no caminho do arquivo");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Caminho do arquivo inválido.", ex);
         }
     }
 
-    private void removerDocumentoFisico(String caminho) {
-        if (caminho == null) return;
-        try {
-            Files.deleteIfExists(Paths.get(caminho));
-        } catch (IOException e) {
-            System.err.println("Erro ao deletar arquivo antigo: " + e.getMessage());
-        }
-    }
+    // --- MÉTODOS DE UTILITÁRIO (HASH E TAMANHO) ---
 
-    private String bytesToHex(byte[] hash) {
-        StringBuilder hexString = new StringBuilder(2 * hash.length);
+    private String gerarHash(byte[] bytes) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(bytes);
+        StringBuilder hexString = new StringBuilder();
         for (byte b : hash) {
             String hex = Integer.toHexString(0xff & b);
             if (hex.length() == 1) hexString.append('0');
@@ -136,8 +153,9 @@ public class SolicitacaoIndividualService {
     }
 
     private String formatarTamanho(long size) {
-        if (size < 1024) return size + " B";
-        int z = (63 - Long.numberOfLeadingZeros(size)) / 10;
-        return String.format("%.1f %sB", (double)size / (1L << (z*10)), " KMGTPE".charAt(z));
+        if (size <= 0) return "0 B";
+        final String[] units = new String[] { "B", "kB", "MB" };
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return String.format("%.1f %s", size / Math.pow(1024, digitGroups), units[digitGroups]);
     }
 }

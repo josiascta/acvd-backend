@@ -10,9 +10,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.UUID;
 
 @RestController
@@ -22,28 +19,34 @@ public class SolicitacaoIndividualController {
 
     private final SolicitacaoIndividualService service;
 
-    // Recebe os dados, gera o PDF, salva fisicamente, registra no BD e devolve o DTO atualizado
+    // 1. Gera os DOIS PDFs, salva no banco e retorna o DTO com os caminhos
     @PostMapping("/gerar-e-salvar")
     public ResponseEntity<SolicitacaoIndividualDTO> gerarESalvar(@Valid @RequestBody SolicitacaoIndividualDTO dados) {
+        // O service agora cuida de disparar preencherAnexoII e preencherAnexoV
         SolicitacaoIndividualDTO salvo = service.gerarESalvarSolicitacao(dados);
         return ResponseEntity.ok(salvo);
     }
 
-    // Endpoint para fazer o download do PDF gerado e salvo
-    @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> downloadDocumento(@PathVariable UUID id) {
-        Resource resource = service.carregarArquivo(id);
+    // 2. Download do ANEXO II (Solicitação)
+    @GetMapping("/{id}/download-solicitacao")
+    public ResponseEntity<Resource> downloadSolicitacao(@PathVariable UUID id) {
+        Resource resource = service.carregarArquivo(id); // Método padrão para o arquivo principal
+        return montarRespostaDownload(resource, "Solicitacao_Individual_");
+    }
 
-        String contentType = "application/pdf";
-        try {
-            contentType = Files.probeContentType(Paths.get(resource.getFile().getAbsolutePath()));
-        } catch (IOException ex) {
-            // Ignorar
-        }
+    // 3. Download do ANEXO V (Termo de Responsabilidade)
+    // Você precisará criar o método carregarArquivoTermo no Service para ler o outro caminho
+    @GetMapping("/{id}/download-termo")
+    public ResponseEntity<Resource> downloadTermo(@PathVariable UUID id) {
+        Resource resource = service.carregarArquivoTermo(id); 
+        return montarRespostaDownload(resource, "Termo_Responsabilidade_");
+    }
 
+    // Método auxiliar para evitar repetição de código de cabeçalhos
+    private ResponseEntity<Resource> montarRespostaDownload(Resource resource, String prefixo) {
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"solicitacao_" + id + ".pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + prefixo + resource.getFilename() + "\"")
                 .body(resource);
     }
 }

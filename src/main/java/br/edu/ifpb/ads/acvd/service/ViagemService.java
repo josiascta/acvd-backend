@@ -26,23 +26,24 @@ public class ViagemService {
     private final UserRepository userRepository;
 
     @Transactional
-    public ViagemDTO criarViagem(UUID servidorId, ViagemDTO dto) throws RegraDeNegocioException {
-        // 1. Validar se o utilizador existe e é um Servidor
-        User responsavel = userRepository.findById(servidorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilizador não encontrado."));
+public ViagemDTO criarViagem(UUID usuarioId, ViagemDTO dto) throws RegraDeNegocioException {
+    // 1. Validar se o utilizador existe
+    User responsavel = userRepository.findById(usuarioId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilizador não encontrado."));
 
-        if (responsavel.getRole() != Role.SERVIDOR) {
-            throw new RegraDeNegocioException("Apenas utilizadores com perfil de SERVIDOR podem registar novas viagens.");
-        }
+    // MUDANÇA AQUI: Agora aceitamos SERVIDOR OU DISCENTE
+    if (responsavel.getRole() != Role.SERVIDOR && responsavel.getRole() != Role.DISCENTE) {
+        throw new RegraDeNegocioException("Apenas utilizadores do IFPB podem registar novas viagens.");
+    }
 
-        // 2. Validações de datas
-        if (dto.dataRetorno().isBefore(dto.dataPartida())) {
-            throw new RegraDeNegocioException("A data de retorno não pode ser anterior à data de partida.");
-        }
+    // 2. Validações de datas (Mantém igual)
+    if (dto.dataRetorno().isBefore(dto.dataPartida())) {
+        throw new RegraDeNegocioException("A data de retorno não pode ser anterior à data de partida.");
+    }
 
-        // 3. Mapear DTO para a Entidade
-        Viagem viagem = new Viagem();
-        viagem.setDataPartida(dto.dataPartida());
+    // 3. Mapear DTO para a Entidade (Mantém igual)
+    Viagem viagem = new Viagem();
+    viagem.setDataPartida(dto.dataPartida());
         viagem.setDataRetorno(dto.dataRetorno());
         viagem.setPrazoAnexosDiscentes(dto.prazoAnexosDiscentes());
         viagem.setValorDiariaCnpq(dto.valorDiariaCnpq());
