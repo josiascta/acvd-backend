@@ -11,8 +11,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "tb_requisicoes", uniqueConstraints = {
-        // Regra: Uma requisição por usuário para uma determinada viagem
-        @UniqueConstraint(columnNames = {"user_id", "viagem_id"})
+        // Regra: Apenas uma requisição por discente para cada viagem
+        @UniqueConstraint(columnNames = {"discente_id", "viagem_id"})
 })
 @Getter
 @Setter
@@ -24,35 +24,35 @@ public class Requisicao {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    // Relacionamento com o Discente
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "discente_id", nullable = false)
     private User discente;
 
+    // Relacionamento com a Viagem
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "viagem_id", nullable = false)
     private Viagem viagem;
 
+    // Conta bancária pode ser nula inicialmente, pois o discente vai preencher depois
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "conta_bancaria_id", nullable = false)
+    @JoinColumn(name = "conta_bancaria_id")
     private ContaBancaria contaBancaria;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TipoAfastamento afastamento;
+    private StatusRequisicao status;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal percentualDiaria;
+    // Novo campo: Motivo da reprovação (preenchido pelo Servidor)
+    @Column(columnDefinition = "TEXT")
+    private String motivoReprovacao;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    // Valores financeiros (Podem ser preenchidos pelo servidor ao adicionar ou terem valores padrão)
+    @Column(precision = 10, scale = 2)
     private BigDecimal valorDiaria;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal inscricaoValor;
 
-    @Column(nullable = false)
-    private boolean solicitaIncricao;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatusRequisicao status;
+    // NOTA: Os campos do Anexo V e outras submissões do aluno serão adicionados aqui futuramente.
 }
