@@ -40,8 +40,6 @@ public record RequisicaoDetalhesDTO(
         );
     }
 
-    // --- Sub-records para organizar as informações de forma limpa ---
-
     public record DiscenteInfo(UUID id, String nome, String matricula, String cpf, String rg, Date dataNascimento, String curso, String email, String telefone) {
         public DiscenteInfo(User u) {
             this(u.getUserId(), u.getNome(), u.getMatricula(), u.getNumeroCpf(), u.getNumeroRg(), u.getDataNascimento(), u.getCurso(), u.getEmail(), u.getTelefone());

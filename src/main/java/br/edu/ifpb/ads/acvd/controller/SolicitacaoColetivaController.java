@@ -31,7 +31,6 @@ public class SolicitacaoColetivaController {
 
         UUID userId = UUID.fromString(jwt.getSubject());
 
-        // Chamada atualizada para refletir a nova arquitetura
         SolicitacaoColetivaDTO salvo = service.processarSolicitacao(userId, dados);
 
         return ResponseEntity.ok(salvo);
@@ -44,9 +43,7 @@ public class SolicitacaoColetivaController {
         String contentType = "application/pdf";
         try {
             contentType = Files.probeContentType(Paths.get(resource.getFile().getAbsolutePath()));
-        } catch (IOException ex) {
-            // Ignorar
-        }
+        } catch (IOException ex) {}
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))

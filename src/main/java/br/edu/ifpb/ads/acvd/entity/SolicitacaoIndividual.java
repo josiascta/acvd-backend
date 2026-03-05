@@ -26,7 +26,6 @@ public class SolicitacaoIndividual extends Anexo {
     @Column(nullable = false)
     private TipoAfastamento afastamento;
 
-    // Atributos derivados do Usuário (salvos no banco para histórico)
     @Column(nullable = false)
     private String nome;
 

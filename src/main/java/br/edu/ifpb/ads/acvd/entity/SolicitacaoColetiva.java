@@ -16,7 +16,6 @@ import java.util.Date;
 @AllArgsConstructor
 public class SolicitacaoColetiva extends Anexo {
 
-    // Dados derivados do usuário (preenchidos pelo backend)
     @Column(nullable = false)
     private String solicitanteNome;
 
@@ -39,7 +38,6 @@ public class SolicitacaoColetiva extends Anexo {
     @Column(nullable = false)
     private TipoAfastamento afastamento;
 
-    // Checkboxes Principais
     @Column(nullable = false)
     private boolean inscricao;
 
@@ -55,7 +53,6 @@ public class SolicitacaoColetiva extends Anexo {
     @Column(nullable = false)
     private boolean passagem;
 
-    // Novos Checkboxes Documentais
     @Column(nullable = false)
     private boolean planejamentoVisitaTecnica;
 
@@ -78,7 +75,6 @@ public class SolicitacaoColetiva extends Anexo {
     @Column(nullable = false)
     private String setorDepartamentoCurso; // Representa o campoCoord no PDF
 
-    // Associação com Viagem (lado proprietário da relação)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "viagem_id", unique = true)
     private Viagem viagem;

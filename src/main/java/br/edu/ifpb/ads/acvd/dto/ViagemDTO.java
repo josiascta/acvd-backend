@@ -26,6 +26,8 @@ public record ViagemDTO(
         Float valorDiariaCnpq,
         @NotNull
         TipoViagem tipoViagem,
+        String nomeResponsavel,
+
         @Valid @NotEmpty(message = "Pelo menos um itinerário deve ser informado")
         List<ItinerarioDTO> itinerarios
 ) {
@@ -37,6 +39,9 @@ public record ViagemDTO(
                 viagem.getPrazoAnexosDiscentes(),
                 viagem.getValorDiariaCnpq(),
                 viagem.getTipoViagem(),
+
+                viagem.getResponsavel() != null ? viagem.getResponsavel().getNome() : null,
+
                 viagem.getItinerarios().stream().map(ItinerarioDTO::new).toList()
         );
     }

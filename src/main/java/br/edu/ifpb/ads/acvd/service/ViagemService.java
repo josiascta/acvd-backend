@@ -27,7 +27,6 @@ public class ViagemService {
 
     @Transactional
     public ViagemDTO criarViagem(UUID servidorId, ViagemDTO dto) throws RegraDeNegocioException {
-        // 1. Validar se o utilizador existe e é um Servidor
         User responsavel = userRepository.findById(servidorId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilizador não encontrado."));
 
@@ -35,12 +34,10 @@ public class ViagemService {
             throw new RegraDeNegocioException("Apenas utilizadores com perfil de SERVIDOR podem registar novas viagens.");
         }
 
-        // 2. Validações de datas
         if (dto.dataRetorno().isBefore(dto.dataPartida())) {
             throw new RegraDeNegocioException("A data de retorno não pode ser anterior à data de partida.");
         }
 
-        // 3. Mapear DTO para a Entidade
         Viagem viagem = new Viagem();
         viagem.setDataPartida(dto.dataPartida());
         viagem.setDataRetorno(dto.dataRetorno());
@@ -49,7 +46,6 @@ public class ViagemService {
         viagem.setTipoViagem(dto.tipoViagem());
         viagem.setResponsavel(responsavel);
 
-        // 4. Adicionar itinerários utilizando o método auxiliar que gere a relação bidirecional
         if (dto.itinerarios() != null) {
             dto.itinerarios().forEach(itinerarioDTO -> {
                 Itinerario itinerario = new Itinerario();
@@ -60,7 +56,6 @@ public class ViagemService {
             });
         }
 
-        // 5. Guardar e retornar o DTO
         Viagem viagemSalva = viagemRepository.save(viagem);
         return new ViagemDTO(viagemSalva);
     }
@@ -77,10 +72,7 @@ public class ViagemService {
         return new ViagemDTO(viagem);
     }
 
-    // Método útil para o servidor ver as viagens pelas quais é responsável
     public List<ViagemDTO> listarViagensDoServidor(UUID servidorId) {
-        // Assume que existe um método customizado no ViagemRepository: findByResponsavelUserId(UUID id)
-        // Se ainda não o criou no repositório, bastará adicionar a assinatura correspondente.
         return viagemRepository.findAll().stream()
                 .filter(v -> v.getResponsavel().getUserId().equals(servidorId))
                 .map(ViagemDTO::new)

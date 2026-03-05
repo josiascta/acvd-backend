@@ -32,7 +32,6 @@ public abstract class Anexo {
     @Column(nullable = false)
     private String tamanho;
 
-    // Novo campo adicionado para manter a mesma lógica de hash do Documento
     @Column(nullable = false)
     private String hash;
 }

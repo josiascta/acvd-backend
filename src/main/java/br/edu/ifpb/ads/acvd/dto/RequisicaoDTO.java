@@ -10,7 +10,6 @@ import java.util.UUID;
 
 public class RequisicaoDTO {
 
-    // 1. DTO de Resposta (O que vai para o Frontend)
     public record Response(
             UUID id,
             UUID viagemId,
@@ -37,22 +36,17 @@ public class RequisicaoDTO {
         }
     }
 
-    // 2. DTO para o Servidor adicionar um Discente à viagem
     public record AdicionarDiscente(
             @NotBlank(message = "A matrícula do discente é obrigatória")
             String matriculaDiscente,
 
-            // Opcional: O servidor já pode definir os valores que o aluno vai receber
             BigDecimal valorDiaria,
             BigDecimal inscricaoValor
     ) {}
 
-    // 3. DTO para o Servidor Avaliar (Aprovar/Reprovar)
     public record Avaliar(
             @NotNull(message = "O estado da avaliação é obrigatório")
             StatusRequisicao status,
-
-            // Será validado como obrigatório no Service se o status for REPROVADO
             String motivoReprovacao
     ) {}
 

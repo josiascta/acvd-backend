@@ -35,7 +35,6 @@ public class ContaBancariaService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-        // Regra de Negócio: Impede edição se existir requisição aprovada
         boolean possuiRequisicaoAprovada = requisicaoRepository.existsByDiscenteUserIdAndStatus(userId, StatusRequisicao.APROVADA);
         if (possuiRequisicaoAprovada) {
             throw new RegraDeNegocioException("Você não pode editar a conta bancária enquanto possuir uma requisição aprovada em andamento.");
