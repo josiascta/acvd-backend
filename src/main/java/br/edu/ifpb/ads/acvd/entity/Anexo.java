@@ -31,4 +31,7 @@ public abstract class Anexo {
 
     @Column(nullable = false)
     private String tamanho;
+
+    @Column(nullable = false)
+    private String hash;
 }

@@ -26,6 +26,21 @@ public class SolicitacaoIndividual extends Anexo {
     @Column(nullable = false)
     private TipoAfastamento afastamento;
 
+    @Column(nullable = false)
+    private String nome;
+
+    @Column(nullable = false)
+    private String matricula;
+
+    @Column(nullable = true)
+    private String curso;
+
+    @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = true)
+    private String telefone;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "viagem_id", unique = true)
     private Viagem viagem;

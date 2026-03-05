@@ -48,9 +48,12 @@ public class Viagem {
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private SolicitacaoIndividual solicitacaoIndividual;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsavel_id", nullable = false)
+    private User responsavel;
+
     public void addItinerario(Itinerario itinerario) {
         itinerarios.add(itinerario);
         itinerario.setViagem(this);
     }
-
 }

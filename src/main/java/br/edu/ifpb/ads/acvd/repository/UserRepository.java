@@ -1,6 +1,7 @@
 package br.edu.ifpb.ads.acvd.repository;
 
 import br.edu.ifpb.ads.acvd.entity.User;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,4 +11,6 @@ import java.util.UUID;
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByMatricula(@NotBlank(message = "A matrícula do discente é obrigatória") String s);
 }
