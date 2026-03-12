@@ -28,6 +28,9 @@ public class Itinerario {
     private LocalDateTime horarioSaida;
 
     @Column(nullable = false)
+    private String descricao;
+
+    @Column(nullable = false)
     private String local;
 
     @ManyToOne(fetch = FetchType.LAZY)

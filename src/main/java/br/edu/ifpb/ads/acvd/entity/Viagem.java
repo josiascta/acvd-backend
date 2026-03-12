@@ -44,9 +44,12 @@ public class Viagem {
 
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private SolicitacaoColetiva solicitacaoColetiva;
-
+    
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private SolicitacaoIndividual solicitacaoIndividual;
+    
+    @OneToOne(mappedBy = "planejamentoAtividade", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PlanejamentoAtividade planejamentoAtividade;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id", nullable = false)
