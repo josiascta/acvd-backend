@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,7 +21,7 @@ public record ViagemDTO(
         LocalDate dataRetorno,
         @NotNull @FutureOrPresent
         LocalDate prazoAnexosDiscentes,
-        @NotNull @Positive
+
         Float valorDiariaCnpq,
         @NotNull
         TipoViagem tipoViagem,

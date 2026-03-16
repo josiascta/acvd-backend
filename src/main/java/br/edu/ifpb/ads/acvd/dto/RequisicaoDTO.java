@@ -2,6 +2,7 @@ package br.edu.ifpb.ads.acvd.dto;
 
 import br.edu.ifpb.ads.acvd.entity.Requisicao;
 import br.edu.ifpb.ads.acvd.entity.StatusRequisicao;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -52,7 +53,7 @@ public class RequisicaoDTO {
 
     public record AdicionarDiscentePorEmail(
             @NotBlank(message = "O e-mail do discente é obrigatório")
-            @jakarta.validation.constraints.Email(message = "Formato de e-mail inválido")
+            @Email(message = "Formato de e-mail inválido")
             String emailDiscente,
 
             BigDecimal valorDiaria,
