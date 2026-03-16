@@ -47,7 +47,7 @@ public class Viagem {
 
     @OneToOne(mappedBy = "viagem") 
     private SolicitacaoIndividual solicitacaoIndividual;
-    // Novo relacionamento: Um SERVIDOR responsável por esta viagem
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id", nullable = false)
     private User responsavel;

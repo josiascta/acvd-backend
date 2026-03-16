@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,10 +21,12 @@ public record ViagemDTO(
         LocalDate dataRetorno,
         @NotNull @FutureOrPresent
         LocalDate prazoAnexosDiscentes,
-        @NotNull @Positive
+
         Float valorDiariaCnpq,
         @NotNull
         TipoViagem tipoViagem,
+        String nomeResponsavel,
+
         @Valid @NotEmpty(message = "Pelo menos um itinerário deve ser informado")
         List<ItinerarioDTO> itinerarios
 ) {
@@ -37,6 +38,9 @@ public record ViagemDTO(
                 viagem.getPrazoAnexosDiscentes(),
                 viagem.getValorDiariaCnpq(),
                 viagem.getTipoViagem(),
+
+                viagem.getResponsavel() != null ? viagem.getResponsavel().getNome() : null,
+
                 viagem.getItinerarios().stream().map(ItinerarioDTO::new).toList()
         );
     }

@@ -53,7 +53,6 @@ public class ResponsavelLegalService {
         ResponsavelLegal rl = responsavelLegalRepository.findByUserUserId(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cadastre os dados do responsável primeiro."));
 
-        // Limpeza de documento anterior
         if (rl.getDocumentoIdentificacao() != null) {
             Documento antigo = rl.getDocumentoIdentificacao();
             documentoService.removerDocumentoFisico(antigo);

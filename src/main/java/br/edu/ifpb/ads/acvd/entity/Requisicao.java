@@ -11,8 +11,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "tb_requisicoes", uniqueConstraints = {
-        // Regra: Uma requisição por usuário para uma determinada viagem
-        @UniqueConstraint(columnNames = {"user_id", "viagem_id"})
+
+        @UniqueConstraint(columnNames = {"discente_id", "viagem_id"})
 })
 @Getter
 @Setter
@@ -25,7 +25,7 @@ public class Requisicao {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "discente_id", nullable = false)
     private User discente;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -33,26 +33,20 @@ public class Requisicao {
     private Viagem viagem;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "conta_bancaria_id", nullable = false)
+    @JoinColumn(name = "conta_bancaria_id")
     private ContaBancaria contaBancaria;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TipoAfastamento afastamento;
+    private StatusRequisicao status;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal percentualDiaria;
+    @Column(columnDefinition = "TEXT")
+    private String motivoReprovacao;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal valorDiaria;
 
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(precision = 10, scale = 2)
     private BigDecimal inscricaoValor;
 
-    @Column(nullable = false)
-    private boolean solicitaIncricao;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatusRequisicao status;
 }

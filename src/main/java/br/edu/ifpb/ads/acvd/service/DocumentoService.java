@@ -45,9 +45,7 @@ public class DocumentoService {
         }
     }
 
-    /**
-     * Processa o upload físico e retorna uma instância de Documento pronta para ser vinculada.
-     */
+
     @Transactional
     public Documento processarUpload(MultipartFile file) {
         String originalName = file.getOriginalFilename();
@@ -137,15 +135,21 @@ public class DocumentoService {
 
     public Documento buscarPorId(UUID docId, UUID userId) {
         Documento doc = documentoRepository.findById(docId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento não encontrado"));
 
-        // Validação de Segurança: O documento pertence ao usuário ou ao seu responsável?
+        User solicitante = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário solicitante não encontrado"));
+
+        if (solicitante.getRole() == br.edu.ifpb.ads.acvd.entity.Role.SERVIDOR) {
+            return doc;
+        }
+
         boolean isOwner = doc.getUser() != null && doc.getUser().getUserId().equals(userId);
         boolean isResponsavelOwner = doc.getResponsavelLegal() != null &&
                 doc.getResponsavelLegal().getUser().getUserId().equals(userId);
 
         if (!isOwner && !isResponsavelOwner) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para acessar este documento.");
         }
 
         return doc;

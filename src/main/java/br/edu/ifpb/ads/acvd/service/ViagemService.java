@@ -26,31 +26,31 @@ public class ViagemService {
     private final UserRepository userRepository;
 
     @Transactional
-public ViagemDTO criarViagem(UUID usuarioId, ViagemDTO dto) throws RegraDeNegocioException {
-    // 1. Validar se o utilizador existe
-    User responsavel = userRepository.findById(usuarioId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilizador não encontrado."));
+
+    public ViagemDTO criarViagem(UUID servidorId, ViagemDTO dto) throws RegraDeNegocioException {
+        User responsavel = userRepository.findById(servidorId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilizador não encontrado."));
+
 
     // MUDANÇA AQUI: Agora aceitamos SERVIDOR OU DISCENTE
     if (responsavel.getRole() != Role.SERVIDOR && responsavel.getRole() != Role.DISCENTE) {
         throw new RegraDeNegocioException("Apenas utilizadores do IFPB podem registar novas viagens.");
     }
 
-    // 2. Validações de datas (Mantém igual)
-    if (dto.dataRetorno().isBefore(dto.dataPartida())) {
-        throw new RegraDeNegocioException("A data de retorno não pode ser anterior à data de partida.");
-    }
 
-    // 3. Mapear DTO para a Entidade (Mantém igual)
-    Viagem viagem = new Viagem();
-    viagem.setDataPartida(dto.dataPartida());
+        if (dto.dataRetorno().isBefore(dto.dataPartida())) {
+            throw new RegraDeNegocioException("A data de retorno não pode ser anterior à data de partida.");
+        }
+
+        Viagem viagem = new Viagem();
+        viagem.setDataPartida(dto.dataPartida());
+
         viagem.setDataRetorno(dto.dataRetorno());
         viagem.setPrazoAnexosDiscentes(dto.prazoAnexosDiscentes());
         viagem.setValorDiariaCnpq(dto.valorDiariaCnpq());
         viagem.setTipoViagem(dto.tipoViagem());
         viagem.setResponsavel(responsavel);
 
-        // 4. Adicionar itinerários utilizando o método auxiliar que gere a relação bidirecional
         if (dto.itinerarios() != null) {
             dto.itinerarios().forEach(itinerarioDTO -> {
                 Itinerario itinerario = new Itinerario();
@@ -61,7 +61,6 @@ public ViagemDTO criarViagem(UUID usuarioId, ViagemDTO dto) throws RegraDeNegoci
             });
         }
 
-        // 5. Guardar e retornar o DTO
         Viagem viagemSalva = viagemRepository.save(viagem);
         return new ViagemDTO(viagemSalva);
     }
@@ -78,10 +77,7 @@ public ViagemDTO criarViagem(UUID usuarioId, ViagemDTO dto) throws RegraDeNegoci
         return new ViagemDTO(viagem);
     }
 
-    // Método útil para o servidor ver as viagens pelas quais é responsável
     public List<ViagemDTO> listarViagensDoServidor(UUID servidorId) {
-        // Assume que existe um método customizado no ViagemRepository: findByResponsavelUserId(UUID id)
-        // Se ainda não o criou no repositório, bastará adicionar a assinatura correspondente.
         return viagemRepository.findAll().stream()
                 .filter(v -> v.getResponsavel().getUserId().equals(servidorId))
                 .map(ViagemDTO::new)
