@@ -1,11 +1,16 @@
 package br.edu.ifpb.ads.acvd.service;
 
+import br.edu.ifpb.ads.acvd.dto.RelatorioDiscenteDTO;
 import br.edu.ifpb.ads.acvd.dto.SolicitacaoIndividualDTO;
+import br.edu.ifpb.ads.acvd.entity.SolicitacaoIndividual;
+import br.edu.ifpb.ads.acvd.repository.SolicitacaoIndividualRepository;
+
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +24,8 @@ import java.util.Locale;
 @Service
 public class PdfSolicitacaoIndividualService {
 
+    @Autowired
+    private SolicitacaoIndividualRepository solicitacaoRepository;
     // MÉTODO PARA O ANEXO II (SOLICITAÇÃO)
     public byte[] preencherAnexoII(SolicitacaoIndividualDTO dados) throws IOException {
         ClassPathResource pdfResource = new ClassPathResource("solicitacao-individual.pdf");
@@ -108,6 +115,57 @@ public class PdfSolicitacaoIndividualService {
                 preencherCampo(acroForm, "contatoFamiliar", dados.contatoFamiliar());
 
                 // Data automática (Substitui o atributo que removemos)
+                String dataHoje = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("pt", "BR")).format(new Date());
+                preencherCampo(acroForm, "cidadeData", "João Pessoa-PB, " + dataHoje);
+
+                tentarFlatten(acroForm);
+            }
+            document.save(outputStream);
+            return outputStream.toByteArray();
+        }
+    }
+    // MÉTODO PARA O ANEXO VII (RELATÓRIO DE VIAGEM)
+    public byte[] preencherAnexoVII(RelatorioDiscenteDTO dados) throws IOException {
+        // BUSCA A SOLICITAÇÃO PARA PEGAR OS DADOS QUE NÃO ESTÃO NO DTO
+        SolicitacaoIndividual solicitacao = solicitacaoRepository.findById(dados.solicitacaoId())
+                .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
+
+        ClassPathResource pdfResource = new ClassPathResource("anexo-vii.pdf");
+
+        try (InputStream is = pdfResource.getInputStream();
+             PDDocument document = Loader.loadPDF(is.readAllBytes());
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+            if (acroForm != null) {
+                acroForm.setNeedAppearances(true);
+
+                // 1. IDENTIFICAÇÃO DO DISCENTE (Busca da Entidade Solicitação)
+                preencherCampo(acroForm, "nome", solicitacao.getNome());
+                preencherCampo(acroForm, "cpf", solicitacao.getCpf());
+                preencherCampo(acroForm, "curso", solicitacao.getCurso());
+                preencherCampo(acroForm, "matricula", solicitacao.getMatricula());
+                preencherCampo(acroForm, "telefone", solicitacao.getTelefone());
+                preencherCampo(acroForm, "email", solicitacao.getEmail());
+
+                // 2. INFORMAÇÕES DO AFASTAMENTO (Busca da Entidade Solicitação)
+                // Ajuste os métodos getDestino/getOrigem conforme sua classe SolicitacaoIndividual
+                preencherCampo(acroForm, "percurso", "João Pessoa-PB / " + solicitacao.getLocalidadeEvento());
+                preencherCampo(acroForm, "dataSaida", solicitacao.getDataSaida());
+                preencherCampo(acroForm, "horaSaida", solicitacao.getHoraSaida());
+                preencherCampo(acroForm, "dataChegada", solicitacao.getDataChegada());
+                preencherCampo(acroForm, "horaChegada", solicitacao.getHoraChegada());
+
+                // 3. DESCRIÇÃO SUCINTA E FINANCEIRO (Vem do DTO do Relatório)
+                preencherCampo(acroForm, "descricaoAtividades", dados.descricaoAtividades());
+                preencherCampo(acroForm, "valorAjudaCusto", dados.valorAjudaCusto() != null ? dados.valorAjudaCusto().toString() : "");
+                preencherCampo(acroForm, "ajudaCustoExtenso", dados.ajudaCustoExtenso());
+                preencherCampo(acroForm, "valorPassagens", dados.valorPassagens() != null ? dados.valorPassagens().toString() : "");
+                preencherCampo(acroForm, "passagensExtenso", dados.passagensExtenso());
+                preencherCampo(acroForm, "numeroBilhetes", dados.numeroBilhetes());
+                preencherCampo(acroForm, "observacoes", dados.observacoes());
+
+                // 4. ASSINATURA E DATA
                 String dataHoje = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("pt", "BR")).format(new Date());
                 preencherCampo(acroForm, "cidadeData", "João Pessoa-PB, " + dataHoje);
 

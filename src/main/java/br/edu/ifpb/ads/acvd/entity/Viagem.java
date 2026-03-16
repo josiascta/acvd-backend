@@ -45,9 +45,8 @@ public class Viagem {
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private SolicitacaoColetiva solicitacaoColetiva;
 
-    @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "viagem") 
     private SolicitacaoIndividual solicitacaoIndividual;
-
     // Novo relacionamento: Um SERVIDOR responsável por esta viagem
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id", nullable = false)

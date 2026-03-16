@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -41,6 +42,11 @@ public class SolicitacaoIndividualController {
         Resource resource = service.carregarArquivoTermo(id); 
         return montarRespostaDownload(resource, "Termo_Responsabilidade_");
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable UUID id) {
+        service.excluir(id);
+        return ResponseEntity.noContent().build();
+    }
 
     // Método auxiliar para evitar repetição de código de cabeçalhos
     private ResponseEntity<Resource> montarRespostaDownload(Resource resource, String prefixo) {
@@ -49,4 +55,9 @@ public class SolicitacaoIndividualController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + prefixo + resource.getFilename() + "\"")
                 .body(resource);
     }
+   @GetMapping("/minhas")
+public ResponseEntity<List<SolicitacaoIndividualDTO>> listarMinhas() {
+    List<SolicitacaoIndividualDTO> lista = service.listarPorDiscente();
+    return ResponseEntity.ok(lista);
+}
 }

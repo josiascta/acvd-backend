@@ -57,6 +57,7 @@ public record SolicitacaoIndividualDTO(
         String horaSaida,
         String dataChegada,
         String horaChegada
+        
 ) {
     public SolicitacaoIndividualDTO(SolicitacaoIndividual entidade) {
         this(
@@ -97,6 +98,7 @@ public record SolicitacaoIndividualDTO(
                 entidade.getHoraSaida(),
                 entidade.getDataChegada(),
                 entidade.getHoraChegada()
+                
         );
     }
 }
