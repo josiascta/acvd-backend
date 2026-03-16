@@ -40,7 +40,6 @@ public class Requisicao {
     @Column(nullable = false)
     private StatusRequisicao status;
 
-
     @Column(columnDefinition = "TEXT")
     private String motivoReprovacao;
 
