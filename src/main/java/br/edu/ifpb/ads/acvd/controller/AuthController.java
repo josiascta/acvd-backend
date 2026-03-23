@@ -37,6 +37,7 @@ public class AuthController {
         user.setNumeroRg(dto.numeroRg());
         user.setDataNascimento(dto.dataNascimento());
         user.setCurso(dto.curso());
+        user.setTurmaPeriodo(dto.turmaPeriodo());
 
         userRepository.save(user);
 

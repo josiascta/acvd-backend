@@ -15,6 +15,7 @@ public record UserResponseDTO(UUID id,
                               String numeroCpf,
                               String numeroRg,
                               String curso,
+                              String turmaPeriodo,
                               Date dataNascimento,
                               Role role) {
     public UserResponseDTO(User user) {
@@ -27,6 +28,7 @@ public record UserResponseDTO(UUID id,
                 user.getNumeroCpf(),
                 user.getNumeroRg(),
                 user.getCurso(),
+                user.getTurmaPeriodo(),
                 user.getDataNascimento(),
                 user.getRole());
     }

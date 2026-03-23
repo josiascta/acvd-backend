@@ -16,4 +16,6 @@ public record RegisterDTO(String email,
                           @Size(min = 9, max = 9, message = "O RG deve ter entre 5 e 20 caracteres")
                           String numeroRg,
                           Date dataNascimento,
+                          String turmaPeriodo,
                           String curso) {}
+                          

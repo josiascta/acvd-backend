@@ -51,4 +51,19 @@ public class SolicitacaoColetivaController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"solicitacao_coletiva_" + id + ".pdf\"")
                 .body(resource);
     }
+    @GetMapping("/{viagemId}/termo-individual/{alunoId}")
+public ResponseEntity<byte[]> baixarTermoIndividual(
+    @PathVariable UUID viagemId, 
+    @PathVariable UUID alunoId,
+    @RequestParam(required = false) String nomeResp,    // ADICIONADO
+    @RequestParam(required = false) String contatoResp  // ADICIONADO
+) {
+    // Agora passamos os dados do modal para o service
+    byte[] pdf = service.gerarTermoResponsabilidadeIndividual(alunoId, viagemId, nomeResp, contatoResp);
+    
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Termo_Individual_" + alunoId + ".pdf\"")
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(pdf);
+}
 }

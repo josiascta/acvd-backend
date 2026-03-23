@@ -44,7 +44,10 @@ public class User {
 
     @Column(nullable = true)
     private String curso;
-
+    
+    @Column(nullable = true)
+    private String turmaPeriodo;
+    
     @Column(nullable = true)
     private Date dataNascimento;
 

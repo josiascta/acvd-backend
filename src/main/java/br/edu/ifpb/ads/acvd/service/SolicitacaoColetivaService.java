@@ -1,6 +1,7 @@
 package br.edu.ifpb.ads.acvd.service;
 
 import br.edu.ifpb.ads.acvd.dto.SolicitacaoColetivaDTO;
+import br.edu.ifpb.ads.acvd.dto.SolicitacaoIndividualDTO;
 import br.edu.ifpb.ads.acvd.entity.SolicitacaoColetiva;
 import br.edu.ifpb.ads.acvd.entity.User;
 import br.edu.ifpb.ads.acvd.entity.Viagem;
@@ -34,24 +35,28 @@ public class SolicitacaoColetivaService {
     private final ViagemRepository viagemRepository;
     private final PdfSolicitacaoColetivaService pdfService;
     private final Path fileStorageLocation;
+    private final PdfSolicitacaoIndividualService pdfIndividualService;
 
-    public SolicitacaoColetivaService(SolicitacaoColetivaRepository repository,
-                                      UserRepository userRepository,
-                                      ViagemRepository viagemRepository,
-                                      PdfSolicitacaoColetivaService pdfService,
-                                      @Value("${app.upload.dir:uploads}") String uploadDir) {
-        this.repository = repository;
-        this.userRepository = userRepository;
-        this.viagemRepository = viagemRepository;
-        this.pdfService = pdfService;
-        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+    // NO CONSTRUTOR (Ajuste aqui):
+public SolicitacaoColetivaService(SolicitacaoColetivaRepository repository,
+                                  UserRepository userRepository,
+                                  ViagemRepository viagemRepository,
+                                  PdfSolicitacaoColetivaService pdfService,
+                                  PdfSolicitacaoIndividualService pdfIndividualService, // 1. ADICIONE ESTE PARÂMETRO
+                                  @Value("${app.upload.dir:uploads}") String uploadDir) {
+    this.repository = repository;
+    this.userRepository = userRepository;
+    this.viagemRepository = viagemRepository;
+    this.pdfService = pdfService;
+    this.pdfIndividualService = pdfIndividualService; // 2. ADICIONE ESTA LINHA
+    this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
 
-        try {
-            Files.createDirectories(this.fileStorageLocation);
-        } catch (IOException ex) {
-            throw new RuntimeException("Erro ao criar pasta de uploads", ex);
-        }
+    try {
+        Files.createDirectories(this.fileStorageLocation);
+    } catch (IOException ex) {
+        throw new RuntimeException("Erro ao criar pasta de uploads", ex);
     }
+}
 
     @Transactional
     public SolicitacaoColetivaDTO processarSolicitacao(UUID userId, SolicitacaoColetivaDTO dto) {
@@ -179,4 +184,72 @@ public class SolicitacaoColetivaService {
         int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
         return String.format("%.1f %s", size / Math.pow(1024, digitGroups), units[digitGroups]);
     }
+    public byte[] gerarTermoResponsabilidadeIndividual(UUID alunoId, UUID viagemId, String nomeResp, String contatoResp) {
+    User aluno = userRepository.findById(alunoId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    Viagem viagem = viagemRepository.findById(viagemId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    // MONTAGEM DO DTO (Respeitando os 35 campos do seu record)
+    SolicitacaoIndividualDTO dadosParaPdf = new SolicitacaoIndividualDTO(
+    // 1-7: IDs e Metadados
+    null,                               // id
+    viagem.getId(),                     // viagemId
+    new java.util.Date(),               // data
+    null,                               // caminhoArquivo
+    null,                               // caminhoArquivoTermo
+    null,                               // tamanho
+    null,                               // hash
+
+    // 8-10: Justificativa e Tipos
+    "Solicitação via Viagem Coletiva",  // justificativa
+    new java.util.Date(),               // solicitadoEm
+    null,                               // afastamento (TipoAfastamento)
+
+    // 11-17: Dados do Solicitante
+    aluno.getNome(),                    // nome
+    aluno.getNumeroCpf(),               // cpf
+    aluno.getMatricula(),               // matricula
+    aluno.getCurso(),                   // curso
+    aluno.getEmail(),                   // email
+    aluno.getTelefone(),                // telefone
+     "Não informado", // endereco
+
+    // 18-23: CAMPOS DO ANEXO V (Ordem do seu Record)
+    "Campus Monteiro",           // campus
+    aluno.getTurmaPeriodo(),            // turmaPeriodo
+    viagem.getTipoViagem().toString(),  // atividadeEvento
+    viagem.getItinerarios().isEmpty() ? "Não informado" : viagem.getItinerarios().get(0).getLocal(), // localidadeEvento
+    (aluno.getResponsavelLegal() != null) ? aluno.getResponsavelLegal().getNome() : "Não informado", // nomeFamiliar
+    (aluno.getResponsavelLegal() != null) ? aluno.getResponsavelLegal().getContato() : "Não informado", // contatoFamiliar
+
+    // 24-26: Dados Bancários
+    null,                               // banco
+    null,                               // agencia
+    null,                               // conta
+
+    // 27-31: Auxílios (5 Booleans)
+    false,                              // solicitaInscricao
+    false,                              // solicitaPassagem
+    false,                              // solicitaHospedagem
+    false,                              // solicitaLocomocao
+    false,                              // solicitaAlimentacao
+
+    // 32-35: Período de Afastamento (4 Strings)
+    (viagem.getDataPartida() != null) ? viagem.getDataPartida().toString() : "", // dataSaida
+    "",                                 // horaSaida
+    (viagem.getDataRetorno() != null) ? viagem.getDataRetorno().toString() : "", // dataChegada
+    ""                                  // horaChegada
+);
+
+    try {
+        // Agora o 'pdfIndividualService' vai conseguir preencher o Anexo V
+        return pdfIndividualService.preencherAnexoV(dadosParaPdf);
+    } catch (IOException e) {
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao processar PDF");
+    }
+}
+
+    
 }
