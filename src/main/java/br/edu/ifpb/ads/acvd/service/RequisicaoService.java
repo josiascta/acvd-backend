@@ -1,5 +1,6 @@
 package br.edu.ifpb.ads.acvd.service;
 
+import br.edu.ifpb.ads.acvd.dto.DiscenteParticipanteDTO;
 import br.edu.ifpb.ads.acvd.dto.RequisicaoDTO;
 import br.edu.ifpb.ads.acvd.dto.RequisicaoDetalhesDTO;
 import br.edu.ifpb.ads.acvd.entity.*;
@@ -138,5 +139,16 @@ public class RequisicaoService {
 
     public List<RequisicaoDTO.Response> listarMinhasRequisicoes(UUID discenteId) {
         return requisicaoRepository.findByDiscenteUserId(discenteId).stream().map(RequisicaoDTO.Response::new).collect(Collectors.toList());
+    }
+
+    public List<DiscenteParticipanteDTO> listarDiscentesParticipantes(UUID viagemId) {
+        return requisicaoRepository.findByViagemId(viagemId).stream()
+                .map(req -> {
+                    User discente = req.getDiscente();
+                    ContaBancaria conta = req.getContaBancaria() != null ? req.getContaBancaria() : discente.getContaBancaria();
+
+                    return new DiscenteParticipanteDTO(discente, conta);
+                })
+                .collect(Collectors.toList());
     }
 }
