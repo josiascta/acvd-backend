@@ -48,11 +48,16 @@ public class Viagem {
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private SolicitacaoIndividual solicitacaoIndividual;
     
+<<<<<<< HEAD
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private PlanejamentoAtividade planejamentoAtividade;
 
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private RelatorioAtividade relatorioAtividade;
+=======
+    @OneToOne(mappedBy = "planejamentoAtividade", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PlanejamentoAtividade planejamentoAtividade;
+>>>>>>> 5ce99292ffcc0e2c18175a35df9649f3ce0cb94f
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id", nullable = false)
