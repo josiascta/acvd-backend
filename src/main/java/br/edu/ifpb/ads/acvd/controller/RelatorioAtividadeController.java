@@ -18,26 +18,26 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.edu.ifpb.ads.acvd.dto.PlanejamentoAtividadeDTO;
-import br.edu.ifpb.ads.acvd.service.PlanejamentoAtividadeService;
+import br.edu.ifpb.ads.acvd.dto.RelatorioAtividadeDTO;
+import br.edu.ifpb.ads.acvd.service.RelatorioAtividadeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/planejamento-atividade")
+@RequestMapping("/relatorio-atividade")
 @RequiredArgsConstructor
-public class PlanejamentoAtividadeController {
-    
-    private final PlanejamentoAtividadeService service;
+public class RelatorioAtividadeController {
+
+    private final RelatorioAtividadeService service;
 
     @PostMapping("/gerar-e-salvar")
-    public ResponseEntity<PlanejamentoAtividadeDTO> gerarESalvar(
+    public ResponseEntity<RelatorioAtividadeDTO> gerarESalvar(
             @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody PlanejamentoAtividadeDTO dados) {
+            @Valid @RequestBody RelatorioAtividadeDTO dados) {
 
         UUID userId = UUID.fromString(jwt.getSubject());
 
-        PlanejamentoAtividadeDTO salvo = service.processarPlanejamento(userId, dados);
+        RelatorioAtividadeDTO salvo = service.processarRelatorio(userId, dados);
 
         return ResponseEntity.ok(salvo);
     }
@@ -54,7 +54,7 @@ public class PlanejamentoAtividadeController {
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"planejamento_atividade_" + id + ".pdf\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"relatorio_atividade_" + id + ".pdf\"")
                 .body(resource);
     }
 }
