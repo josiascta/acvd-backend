@@ -22,7 +22,7 @@ public class PdfPlanejamentoAtividade {
     
     public byte[] preencherPdf(PlanejamentoAtividade dados) throws IOException {
 
-        ClassPathResource pdfResource = new ClassPathResource("solicitacao-coletiva.pdf");
+        ClassPathResource pdfResource = new ClassPathResource("planejamento-atividade.pdf");
 
         try (InputStream is = pdfResource.getInputStream();
              PDDocument document = Loader.loadPDF(is.readAllBytes());

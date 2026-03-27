@@ -19,23 +19,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import br.edu.ifpb.ads.acvd.dto.PlanejamentoAtividadeDTO;
-import br.edu.ifpb.ads.acvd.entity.PlanejamentoAtividade;
+import br.edu.ifpb.ads.acvd.dto.RelatorioAtividadeDTO;
+import br.edu.ifpb.ads.acvd.entity.RelatorioAtividade;
 import br.edu.ifpb.ads.acvd.entity.Viagem;
-import br.edu.ifpb.ads.acvd.repository.PlanejamentoAtividadeRepository;
+import br.edu.ifpb.ads.acvd.repository.RelatorioAtividadeRepository;
 import br.edu.ifpb.ads.acvd.repository.ViagemRepository;
 
 @Service
-public class PlanejamentoAtividadeService {
-
-    private final PlanejamentoAtividadeRepository repository;
+public class RelatorioAtividadeService {
+    
+    private final RelatorioAtividadeRepository repository;
     private final ViagemRepository viagemRepository;
     private final Path fileStorageLocation;
-    private final PdfPlanejamentoAtividade pdfService;
+    private final PdfRelatorioAtividade pdfService;
 
-        public PlanejamentoAtividadeService(PlanejamentoAtividadeRepository repository,
+        public RelatorioAtividadeService(RelatorioAtividadeRepository repository,
                                       ViagemRepository viagemRepository,
-                                      PdfPlanejamentoAtividade pdfService,
+                                      PdfRelatorioAtividade pdfService,
                                       @Value("${app.upload.dir:uploads}") String uploadDir) {
         this.repository = repository;
         this.viagemRepository = viagemRepository;
@@ -51,53 +51,43 @@ public class PlanejamentoAtividadeService {
     
     
     @Transactional
-    public PlanejamentoAtividadeDTO processarPlanejamento(UUID userId, PlanejamentoAtividadeDTO dto) {
-        PlanejamentoAtividade entidadeSalva = salvarDadosNoBanco(userId, dto);
-        PlanejamentoAtividade entidadeComPdf = gerarEAnexarPdf(entidadeSalva);
-        return new PlanejamentoAtividadeDTO(entidadeComPdf);
+    public RelatorioAtividadeDTO processarRelatorio(UUID userId, RelatorioAtividadeDTO dto) {
+        RelatorioAtividade entidadeSalva = salvarDadosNoBanco(userId, dto);
+        RelatorioAtividade entidadeComPdf = gerarEAnexarPdf(entidadeSalva);
+        return new RelatorioAtividadeDTO(entidadeComPdf);
     }
 
     
-    private PlanejamentoAtividade salvarDadosNoBanco(UUID userId, PlanejamentoAtividadeDTO dto) {
+    private RelatorioAtividade salvarDadosNoBanco(UUID userId, RelatorioAtividadeDTO dto) {
         Viagem viagem = viagemRepository.findById(dto.viagemId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Viagem não encontrada."));
 
-        PlanejamentoAtividade planejamento = repository.findByViagemId(viagem.getId())
-                .orElse(new PlanejamentoAtividade());
+        RelatorioAtividade relatorio = repository.findByViagemId(viagem.getId())
+                .orElse(new RelatorioAtividade());
 
-        planejamento.setViagem(viagem);
+        relatorio.setViagem(viagem);
 
-        if (planejamento.getData() == null) {
-            planejamento.setData(new Date());
-            planejamento.setCaminhoArquivo("");
-            planejamento.setTamanho("");
-            planejamento.setHash("");
+        if (relatorio.getData() == null) {
+            relatorio.setData(new Date());
+            relatorio.setCaminhoArquivo("");
+            relatorio.setTamanho("");
+            relatorio.setHash("");
         }
 
-        planejamento.setCoordenadoresDaAtividade(dto.coordenadoresDaAtividade());
-        planejamento.setCoordenadoresDePesquisaExtensao(dto.coordenadoresDePesquisaExtensao());
-        planejamento.setDisciplina(dto.disciplina());
-        planejamento.setCurso(dto.curso());
-        planejamento.setTurma(dto.turma());
-        planejamento.setMetodologia(dto.metodologia());
-        planejamento.setObjetivos(dto.objetivos());
-        planejamento.setCargaHorariaCompatibilidade(dto.cargaHorariaCompatibilidade());
-        planejamento.setJustificativaImportancia(dto.justificativaImportancia());
-        planejamento.setNumeroParticipantes(Integer.parseInt(dto.numeroParticipantes()));
-        planejamento.setItensSeguranca(dto.itensSeguranca());
-        planejamento.setCargaHorariaNoDiarioDeClasse(dto.cargaHorariaNoDiarioDeClasse());
-        planejamento.setContatoDosCoordenadores(dto.contatoDosCoordenadores());
+        relatorio.setCoordenadoresDaAtividade(dto.coordenadoresDaAtividade());
+        relatorio.setDisciplinaOuProjeto(dto.disciplinaOuProjeto());
+        relatorio.setRelatorio(dto.relatorio());
+        relatorio.setConsideracoesFinais(dto.consideracoesFinais());
+        relatorio.setContatoDaInstituicao(dto.contatoDaInstituicao());
 
-        planejamento.setViagem(viagem);
-
-        return repository.save(planejamento);
+        return repository.save(relatorio);
     }
 
-    private PlanejamentoAtividade gerarEAnexarPdf(PlanejamentoAtividade planejamento) {
+    private RelatorioAtividade gerarEAnexarPdf(RelatorioAtividade relatorio) {
         try {
-            String caminhoArquivoAntigo = planejamento.getCaminhoArquivo();
+            String caminhoArquivoAntigo = relatorio.getCaminhoArquivo();
 
-            byte[] pdfBytes = pdfService.preencherPdf(planejamento);
+            byte[] pdfBytes = pdfService.preencherPdf(relatorio);
 
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hashBytes = digest.digest(pdfBytes);
@@ -107,18 +97,18 @@ public class PlanejamentoAtividadeService {
             Path targetLocation = this.fileStorageLocation.resolve(finalFileName);
             Files.write(targetLocation, pdfBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
-            planejamento.setCaminhoArquivo(targetLocation.toString());
-            planejamento.setTamanho(formatarTamanho(pdfBytes.length));
-            planejamento.setHash(hashCalculado);
-            planejamento.setData(new Date());
+            relatorio.setCaminhoArquivo(targetLocation.toString());
+            relatorio.setTamanho(formatarTamanho(pdfBytes.length));
+            relatorio.setHash(hashCalculado);
+            relatorio.setData(new Date());
 
-            PlanejamentoAtividade planejamentoSalva = repository.save(planejamento);
+            RelatorioAtividade relatorioSalva = repository.save(relatorio);
 
             if (caminhoArquivoAntigo != null && !caminhoArquivoAntigo.isEmpty() && !caminhoArquivoAntigo.equals(targetLocation.toString())) {
                 removerDocumentoFisico(caminhoArquivoAntigo);
             }
 
-            return planejamentoSalva;
+            return relatorioSalva;
 
         } catch (IOException | NoSuchAlgorithmException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao gerar ou salvar arquivo PDF", ex);
@@ -126,11 +116,11 @@ public class PlanejamentoAtividadeService {
     }
 
     public Resource carregarArquivo(UUID id) {
-        PlanejamentoAtividade planejamento = repository.findById(id)
+        RelatorioAtividade relatorio = repository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação Coletiva não encontrada"));
 
         try {
-            Path filePath = Paths.get(planejamento.getCaminhoArquivo());
+            Path filePath = Paths.get(relatorio.getCaminhoArquivo());
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
