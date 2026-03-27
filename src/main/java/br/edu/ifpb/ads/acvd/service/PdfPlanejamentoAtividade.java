@@ -22,11 +22,7 @@ public class PdfPlanejamentoAtividade {
     
     public byte[] preencherPdf(PlanejamentoAtividade dados) throws IOException {
 
-<<<<<<< HEAD
         ClassPathResource pdfResource = new ClassPathResource("planejamento-atividade.pdf");
-=======
-        ClassPathResource pdfResource = new ClassPathResource("solicitacao-coletiva.pdf");
->>>>>>> 5ce9929 (feat: Anexo 3 - Formulario de planejamento de Atividades)
 
         try (InputStream is = pdfResource.getInputStream();
              PDDocument document = Loader.loadPDF(is.readAllBytes());
@@ -53,7 +49,6 @@ public class PdfPlanejamentoAtividade {
                 List<Itinerario> itinerarios = dados.getViagem().getItinerarios();
 
                 for(int i = 0; i < 7; i++){
-<<<<<<< HEAD
                     try {
                         Itinerario itinerario = itinerarios.get(i);
                         preencherCampo(acroForm, "campoAtividadeData" + i, itinerario.getHorarioEntrada().toString());
@@ -66,12 +61,6 @@ public class PdfPlanejamentoAtividade {
                         preencherCampo(acroForm, "campoAtividadeDescricao" + i, "");
 
                     }
-=======
-                    Itinerario itinerario = itinerarios.get(i);
-                    preencherCampo(acroForm, "campoAtividadeData" + i, itinerario.getHorarioEntrada().toString());
-                    preencherCampo(acroForm, "campoAtividadeDescricao" + i, itinerario.getDescricao());
-                    preencherCampo(acroForm, "campoAtividadeLocal" + i, itinerario.getLocal());
->>>>>>> 5ce9929 (feat: Anexo 3 - Formulario de planejamento de Atividades)
                 }
                 
                 acroForm.flatten();

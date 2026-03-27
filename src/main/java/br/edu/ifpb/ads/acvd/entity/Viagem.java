@@ -48,16 +48,11 @@ public class Viagem {
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private SolicitacaoIndividual solicitacaoIndividual;
     
-<<<<<<< HEAD
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private PlanejamentoAtividade planejamentoAtividade;
 
     @OneToOne(mappedBy = "viagem", cascade = CascadeType.ALL, orphanRemoval = true)
     private RelatorioAtividade relatorioAtividade;
-=======
-    @OneToOne(mappedBy = "planejamentoAtividade", cascade = CascadeType.ALL, orphanRemoval = true)
-    private PlanejamentoAtividade planejamentoAtividade;
->>>>>>> 5ce9929 (feat: Anexo 3 - Formulario de planejamento de Atividades)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsavel_id", nullable = false)

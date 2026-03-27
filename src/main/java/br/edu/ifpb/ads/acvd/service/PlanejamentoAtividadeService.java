@@ -1,14 +1,5 @@
 package br.edu.ifpb.ads.acvd.service;
 
-<<<<<<< HEAD
-=======
-import br.edu.ifpb.ads.acvd.dto.PlanejamentoAtividadeDTO;
-import br.edu.ifpb.ads.acvd.entity.PlanejamentoAtividade;
-import br.edu.ifpb.ads.acvd.entity.Viagem;
-import br.edu.ifpb.ads.acvd.repository.PlanejamentoAtividadeRepository;
-import br.edu.ifpb.ads.acvd.repository.ViagemRepository;
-
->>>>>>> 5ce9929 (feat: Anexo 3 - Formulario de planejamento de Atividades)
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -24,7 +15,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
-<<<<<<< HEAD
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -36,11 +26,6 @@ import br.edu.ifpb.ads.acvd.repository.PlanejamentoAtividadeRepository;
 import br.edu.ifpb.ads.acvd.repository.ViagemRepository;
 
 @Service
-=======
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
->>>>>>> 5ce9929 (feat: Anexo 3 - Formulario de planejamento de Atividades)
 public class PlanejamentoAtividadeService {
 
     private final PlanejamentoAtividadeRepository repository;
