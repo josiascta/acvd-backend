@@ -26,7 +26,7 @@ public record ViagemDTO(
         @NotNull
         TipoViagem tipoViagem,
         String nomeResponsavel,
-
+        UUID solicitacaoColetivaId,
         @Valid @NotEmpty(message = "Pelo menos um itinerário deve ser informado")
         List<ItinerarioDTO> itinerarios
 ) {
@@ -40,7 +40,7 @@ public record ViagemDTO(
                 viagem.getTipoViagem(),
 
                 viagem.getResponsavel() != null ? viagem.getResponsavel().getNome() : null,
-
+                viagem.getSolicitacaoColetiva() != null ? viagem.getSolicitacaoColetiva().getId() : null,
                 viagem.getItinerarios().stream().map(ItinerarioDTO::new).toList()
         );
     }

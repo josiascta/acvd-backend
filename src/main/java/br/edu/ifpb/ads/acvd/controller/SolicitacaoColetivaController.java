@@ -36,34 +36,25 @@ public class SolicitacaoColetivaController {
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> downloadDocumento(@PathVariable UUID id) {
-        Resource resource = service.carregarArquivo(id);
+    public ResponseEntity<byte[]> downloadDocumento(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID id) {
 
-        String contentType = "application/pdf";
-        try {
-            contentType = Files.probeContentType(Paths.get(resource.getFile().getAbsolutePath()));
-        } catch (IOException ex) {
-            // Mantém application/pdf como fallback
-        }
+        // Pega o ID do usuário logado
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        // Passa o ID da solicitação E o ID do usuário logado
+        byte[] pdfBytes = service.gerarPdfSobDemanda(id, userId);
 
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
+                .contentType(MediaType.APPLICATION_PDF)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"solicitacao_coletiva_" + id + ".pdf\"")
-                .body(resource);
+                .body(pdfBytes);
     }
-    @GetMapping("/{viagemId}/termo-individual/{alunoId}")
-public ResponseEntity<byte[]> baixarTermoIndividual(
-    @PathVariable UUID viagemId, 
-    @PathVariable UUID alunoId,
-    @RequestParam(required = false) String nomeResp,    // ADICIONADO
-    @RequestParam(required = false) String contatoResp  // ADICIONADO
-) {
-    // Agora passamos os dados do modal para o service
-    byte[] pdf = service.gerarTermoResponsabilidadeIndividual(alunoId, viagemId, nomeResp, contatoResp);
-    
-    return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Termo_Individual_" + alunoId + ".pdf\"")
-            .contentType(MediaType.APPLICATION_PDF)
-            .body(pdf);
-}
+
+    @GetMapping("/viagem/{viagemId}")
+    public ResponseEntity<SolicitacaoColetivaDTO> buscarPorViagem(@PathVariable UUID viagemId) {
+        SolicitacaoColetivaDTO dto = service.buscarPorViagemId(viagemId);
+        return ResponseEntity.ok(dto);
+    }
 }

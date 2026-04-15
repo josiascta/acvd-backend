@@ -35,23 +35,4 @@ public class PdfSolicitacaoIndividualController {
             return ResponseEntity.internalServerError().build();
         }
     }
-
-    // DOWNLOAD DO ANEXO V (TERMO DE RESPONSABILIDADE)
-    @PostMapping("/gerar-termo")
-    public ResponseEntity<byte[]> gerarTermo(@RequestBody SolicitacaoIndividualDTO dados) {
-        try {
-            // Chamando o NOVO método no service
-            byte[] pdfBytes = pdfService.preencherAnexoV(dados);
-
-            String nomeArquivo = "Anexo_V_Termo_" + dados.matricula() + ".pdf";
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"")
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .body(pdfBytes);
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
 }

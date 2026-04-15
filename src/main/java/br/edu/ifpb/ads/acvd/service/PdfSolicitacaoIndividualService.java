@@ -86,63 +86,6 @@ public class PdfSolicitacaoIndividualService {
         }
     }
 
-    // MÉTODO PARA O ANEXO V (TERMO DE RESPONSABILIDADE)
-public byte[] preencherAnexoV(SolicitacaoIndividualDTO dados) throws IOException {
-    // 1. Busca a data de nascimento do aluno usando a matrícula que já está no DTO
-    Date dataNasc = userRepository.findByMatricula(dados.matricula())
-            .map(User::getDataNascimento)
-            .orElse(null);
-
-    ClassPathResource pdfResource = new ClassPathResource("anexo-v.pdf");
-
-    try (InputStream is = pdfResource.getInputStream();
-         PDDocument document = Loader.loadPDF(is.readAllBytes());
-         ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-        PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
-        if (acroForm != null) {
-            acroForm.setNeedAppearances(true);
-
-            // 2. Calcula a idade
-            int idade = 0;
-            if (dataNasc != null) {
-                java.time.LocalDate nascimento = dataNasc.toInstant()
-                        .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-                idade = java.time.Period.between(nascimento, java.time.LocalDate.now()).getYears();
-            }
-
-            // 3. Preenchimento de dados comuns
-            preencherCampo(acroForm, "nomeAluno", dados.nome());
-            preencherCampo(acroForm, "curso", dados.curso());
-            preencherCampo(acroForm, "matricula", dados.matricula());
-            preencherCampo(acroForm, "campus", dados.campus());
-            preencherCampo(acroForm, "turma", dados.turmaPeriodo());
-            preencherCampo(acroForm, "atividade", dados.atividadeEvento());
-            preencherCampo(acroForm, "local", dados.localidadeEvento());
-            preencherCampo(acroForm, "periodo", "de " + dados.dataSaida() + " a " + dados.dataChegada());
-
-            // 4. Lógica de Maioridade baseada na Idade Real
-            if (idade >= 18) {
-                // MAIOR: Telefone do aluno vai para a linha 'contatoMaior'
-                preencherCampo(acroForm, "contatoMaior", dados.telefone());
-                preencherCampo(acroForm, "nomeFamiliar", "");
-                preencherCampo(acroForm, "contatoFamiliar", "");
-            } else {
-                // MENOR: Preenche dados do responsável (do DTO)
-                preencherCampo(acroForm, "nomeFamiliar", dados.nomeFamiliar());
-                preencherCampo(acroForm, "contatoFamiliar", dados.contatoFamiliar());
-                preencherCampo(acroForm, "contatoMaior", "");
-            }
-
-            String dataHoje = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("pt", "BR")).format(new Date());
-            preencherCampo(acroForm, "cidadeData", "Monteiro-PB, " + dataHoje);
-
-            tentarFlatten(acroForm);
-        }
-        document.save(outputStream);
-        return outputStream.toByteArray();
-    }
-}
     // MÉTODO PARA O ANEXO VII (RELATÓRIO DE VIAGEM)
     public byte[] preencherAnexoVII(RelatorioDiscenteDTO dados) throws IOException {
         // BUSCA A SOLICITAÇÃO PARA PEGAR OS DADOS QUE NÃO ESTÃO NO DTO

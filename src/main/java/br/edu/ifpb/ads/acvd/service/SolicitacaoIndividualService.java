@@ -35,15 +35,18 @@ public class SolicitacaoIndividualService {
     private final SolicitacaoIndividualRepository repository;
     private final ViagemRepository viagemRepository;
     private final PdfSolicitacaoIndividualService pdfService;
+    private final PdfTermoResponsabilidadeService pdfTermoResponsabilidadeService;
     private final Path fileStorageLocation;
 
     public SolicitacaoIndividualService(SolicitacaoIndividualRepository repository,
                                         ViagemRepository viagemRepository,
                                         PdfSolicitacaoIndividualService pdfService,
                                         RelatorioDiscenteRepository relatorioRepository,
+                                        PdfTermoResponsabilidadeService pdfTermoResponsabilidadeService,
                                         @Value("${app.upload.dir:uploads}") String uploadDir) {
         this.repository = repository;
         this.viagemRepository = viagemRepository;
+        this.pdfTermoResponsabilidadeService = pdfTermoResponsabilidadeService;
         this.pdfService = pdfService;
         this.relatorioRepository = relatorioRepository;
         this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
@@ -94,7 +97,7 @@ public class SolicitacaoIndividualService {
 
             // Gerar PDFs
             byte[] bytesAnexoII = pdfService.preencherAnexoII(dto);
-            byte[] bytesAnexoV = pdfService.preencherAnexoV(dto);
+            byte[] bytesAnexoV = pdfTermoResponsabilidadeService.gerarPdfTermo(dto);
 
             Path pathII = this.fileStorageLocation.resolve(viagem.getId() + "_AnexoII.pdf");
             Path pathV = this.fileStorageLocation.resolve(viagem.getId() + "_AnexoV.pdf");

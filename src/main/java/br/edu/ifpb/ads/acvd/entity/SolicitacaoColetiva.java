@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Entity
 @Table(name = "tb_solicitacoes_coletivas")
@@ -14,22 +15,11 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SolicitacaoColetiva extends Anexo {
+public class SolicitacaoColetiva {
 
-    @Column(nullable = false)
-    private String solicitanteNome;
-
-    @Column(nullable = false)
-    private String solicitanteMatricula;
-
-    @Column(nullable = true)
-    private String solicitanteTelefone;
-
-    @Column(nullable = false)
-    private String solicitanteEmail;
-
-    @Column(nullable = true)
-    private String curso;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(nullable = false)
     private Date solicitadoEm;
