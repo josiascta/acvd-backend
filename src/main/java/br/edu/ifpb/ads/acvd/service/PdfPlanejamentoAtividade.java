@@ -49,10 +49,18 @@ public class PdfPlanejamentoAtividade {
                 List<Itinerario> itinerarios = dados.getViagem().getItinerarios();
 
                 for(int i = 0; i < 7; i++){
-                    Itinerario itinerario = itinerarios.get(i);
-                    preencherCampo(acroForm, "campoAtividadeData" + i, itinerario.getHorarioEntrada().toString());
-                    preencherCampo(acroForm, "campoAtividadeDescricao" + i, itinerario.getDescricao());
-                    preencherCampo(acroForm, "campoAtividadeLocal" + i, itinerario.getLocal());
+                    try {
+                        Itinerario itinerario = itinerarios.get(i);
+                        preencherCampo(acroForm, "campoAtividadeData" + i, itinerario.getHorarioEntrada().toString());
+                        preencherCampo(acroForm, "campoAtividadeLocal" + i, itinerario.getLocal());
+                        preencherCampo(acroForm, "campoAtividadeDescricao" + i, itinerario.getDescricao());
+                    } catch (IndexOutOfBoundsException e) {
+                        // Se não houver itinerário para este índice, preenche os campos com vazio
+                        preencherCampo(acroForm, "campoAtividadeData" + i, "");
+                        preencherCampo(acroForm, "campoAtividadeLocal" + i, "");
+                        preencherCampo(acroForm, "campoAtividadeDescricao" + i, "");
+
+                    }
                 }
                 
                 acroForm.flatten();

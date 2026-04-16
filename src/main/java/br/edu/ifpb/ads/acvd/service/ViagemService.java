@@ -57,6 +57,7 @@ public class ViagemService {
                 itinerario.setHorarioEntrada(itinerarioDTO.horarioEntrada());
                 itinerario.setHorarioSaida(itinerarioDTO.horarioSaida());
                 itinerario.setLocal(itinerarioDTO.local());
+                itinerario.setDescricao(itinerarioDTO.descricao());
                 viagem.addItinerario(itinerario);
             });
         }
