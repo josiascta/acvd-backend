@@ -13,17 +13,7 @@ import java.util.UUID;
 public record SolicitacaoColetivaDTO(
         UUID id,
         @NotNull(message = "O ID da Viagem é obrigatório") UUID viagemId,
-        Date data,
-        String caminhoArquivo,
-        String tamanho,
-        String hash,
 
-        // Estes campos não precisam de validação do frontend pois o backend irá preencher
-        String solicitanteNome,
-        String solicitanteMatricula,
-        String solicitanteTelefone,
-        String solicitanteEmail,
-        String curso,
 
         @NotNull(message = "A data da solicitação é obrigatória") @PastOrPresent Date solicitadoEm,
         @NotNull(message = "O tipo de afastamento é obrigatório") TipoAfastamento afastamento,
@@ -47,15 +37,7 @@ public record SolicitacaoColetivaDTO(
         this(
                 entidade.getId(),
                 entidade.getViagem() != null ? entidade.getViagem().getId() : null,
-                entidade.getData(),
-                entidade.getCaminhoArquivo(),
-                entidade.getTamanho(),
-                entidade.getHash(),
-                entidade.getSolicitanteNome(),
-                entidade.getSolicitanteMatricula(),
-                entidade.getSolicitanteTelefone(),
-                entidade.getSolicitanteEmail(),
-                entidade.getCurso(),
+
                 entidade.getSolicitadoEm(),
                 entidade.getAfastamento(),
                 entidade.isInscricao(),

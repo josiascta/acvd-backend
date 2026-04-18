@@ -1,6 +1,7 @@
 package br.edu.ifpb.ads.acvd.service;
 
 import br.edu.ifpb.ads.acvd.entity.SolicitacaoColetiva;
+import br.edu.ifpb.ads.acvd.entity.User;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -17,7 +18,7 @@ import java.util.Calendar;
 @Service
 public class PdfSolicitacaoColetivaService {
 
-    public byte[] preencherPdf(SolicitacaoColetiva dados) throws IOException {
+    public byte[] preencherPdf(SolicitacaoColetiva dados, User responsavel) throws IOException {
 
         ClassPathResource pdfResource = new ClassPathResource("solicitacao-coletiva.pdf");
 
@@ -29,12 +30,12 @@ public class PdfSolicitacaoColetivaService {
             PDAcroForm acroForm = docCatalog.getAcroForm();
 
             if (acroForm != null) {
-                preencherCampo(acroForm, "campoNome", dados.getSolicitanteNome());
+                preencherCampo(acroForm, "campoNome", responsavel.getNome());
                 preencherCampo(acroForm, "campoCoord", dados.getSetorDepartamentoCurso());
-                preencherCampo(acroForm, "campoCurso", dados.getCurso());
-                preencherCampo(acroForm, "campoEmail", dados.getSolicitanteEmail());
-                preencherCampo(acroForm, "campoMatricula", dados.getSolicitanteMatricula());
-                preencherCampo(acroForm, "campoTelefone", dados.getSolicitanteTelefone());
+                preencherCampo(acroForm, "campoCurso", responsavel.getCurso());
+                preencherCampo(acroForm, "campoEmail", responsavel.getEmail());
+                preencherCampo(acroForm, "campoMatricula", responsavel.getMatricula());
+                preencherCampo(acroForm, "campoTelefone", responsavel.getTelefone());
                 preencherCampo(acroForm, "campoJustificativa", dados.getJustificativa());
 
                 if (dados.getSolicitadoEm() != null) {
