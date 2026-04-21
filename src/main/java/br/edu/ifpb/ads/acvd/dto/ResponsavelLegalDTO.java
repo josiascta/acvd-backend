@@ -1,6 +1,5 @@
 package br.edu.ifpb.ads.acvd.dto;
 
-import br.edu.ifpb.ads.acvd.entity.Documento;
 import br.edu.ifpb.ads.acvd.entity.ResponsavelLegal;
 
 import java.util.UUID;

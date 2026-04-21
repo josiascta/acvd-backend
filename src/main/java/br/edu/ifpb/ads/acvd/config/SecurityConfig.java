@@ -62,7 +62,7 @@ public class SecurityConfig {
             String picture = oidcUser.getPicture();
 
             Role role;
-            if (email.equals("josiasjt3@gmail.com") || email.equals("davir9647@gmail.com") || email.endsWith("@ifpb.edu.br")) {
+            if (email.equals("josiasjt3@gmail.com") || email.equals("davir9647@gmail.com") || email.equals("eduardojose71953@gmail.com") || email.endsWith("@ifpb.edu.br")) {
                 role = Role.SERVIDOR;
             } else if (email.equals("orienracjos@gmail.com") || email.endsWith("@academico.ifpb.edu.br")) {
                 role = Role.DISCENTE;

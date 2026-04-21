@@ -49,10 +49,11 @@ public record ViagemDTO(
             UUID id,
             @NotNull LocalDateTime horarioEntrada,
             @NotNull LocalDateTime horarioSaida,
-            @NotEmpty String local
+            @NotEmpty String local,
+            @NotEmpty String descricao
     ) {
         public ItinerarioDTO(Itinerario itinerario) {
-            this(itinerario.getId(), itinerario.getHorarioEntrada(), itinerario.getHorarioSaida(), itinerario.getLocal());
+            this(itinerario.getId(), itinerario.getHorarioEntrada(), itinerario.getHorarioSaida(), itinerario.getLocal(), itinerario.getDescricao());
         }
     }
 }
