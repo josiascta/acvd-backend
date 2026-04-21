@@ -54,7 +54,11 @@ public class PlanejamentoAtividadeController {
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
+<<<<<<< HEAD
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"planejamento_atividade_" + id + ".pdf\"")
+=======
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"solicitacao_coletiva_" + id + ".pdf\"")
+>>>>>>> 5ce9929 (feat: Anexo 3 - Formulario de planejamento de Atividades)
                 .body(resource);
     }
 }
