@@ -22,7 +22,7 @@ public class PdfRelatorioAtividade {
 
     public byte[] preencherPdf(RelatorioAtividade dados) throws IOException {
 
-        ClassPathResource pdfResource = new ClassPathResource("relatorio-atividade.pdf");
+        ClassPathResource pdfResource = new ClassPathResource("anexo-vi.pdf");
 
         try (InputStream is = pdfResource.getInputStream();
              PDDocument document = Loader.loadPDF(is.readAllBytes());

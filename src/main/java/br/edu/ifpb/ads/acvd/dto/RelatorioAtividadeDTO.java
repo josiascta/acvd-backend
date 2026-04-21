@@ -5,6 +5,7 @@ import java.util.UUID;
 import br.edu.ifpb.ads.acvd.entity.RelatorioAtividade;
 
 public record RelatorioAtividadeDTO(
+    UUID id,
     String coordenadoresDaAtividade,
     String disciplinaOuProjeto,
     String relatorio,
@@ -14,6 +15,7 @@ public record RelatorioAtividadeDTO(
 ) {
     public RelatorioAtividadeDTO(RelatorioAtividade entidade) {
         this(
+            entidade.getId(),
             entidade.getCoordenadoresDaAtividade(),
             entidade.getDisciplinaOuProjeto(),
             entidade.getRelatorio(),

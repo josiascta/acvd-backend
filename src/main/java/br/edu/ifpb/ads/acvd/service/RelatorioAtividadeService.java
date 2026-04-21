@@ -117,7 +117,7 @@ public class RelatorioAtividadeService {
 
     public Resource carregarArquivo(UUID id) {
         RelatorioAtividade relatorio = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação Coletiva não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relatorio Atividade não encontrada"));
 
         try {
             Path filePath = Paths.get(relatorio.getCaminhoArquivo());
