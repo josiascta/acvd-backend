@@ -127,7 +127,7 @@ public class PlanejamentoAtividadeService {
 
     public Resource carregarArquivo(UUID id) {
         PlanejamentoAtividade planejamento = repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação Coletiva não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Planejamento de Atividade não encontrado"));
 
         try {
             Path filePath = Paths.get(planejamento.getCaminhoArquivo());

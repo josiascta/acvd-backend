@@ -52,9 +52,11 @@ public class PlanejamentoAtividadeController {
             contentType = Files.probeContentType(Paths.get(resource.getFile().getAbsolutePath()));
         } catch (IOException ex) {}
 
+        String nomeArquivo = "Anexo_III_PLANEJAMENTO_DA_ATIVIDADE_DE_CAMPO.pdf";
+
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"planejamento_atividade_" + id + ".pdf\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"")
                 .body(resource);
     }
 }
