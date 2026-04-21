@@ -52,9 +52,11 @@ public class RelatorioAtividadeController {
             contentType = Files.probeContentType(Paths.get(resource.getFile().getAbsolutePath()));
         } catch (IOException ex) {}
 
+        String nomeArquivo = "Anexo_VI_RELATORIO_DE_ATIVIDADE_DE_CAMPO.pdf";
+
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"relatorio_atividade_" + id + ".pdf\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"")
                 .body(resource);
     }
 }

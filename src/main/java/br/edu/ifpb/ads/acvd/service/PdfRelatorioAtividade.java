@@ -3,6 +3,9 @@ package br.edu.ifpb.ads.acvd.service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -34,6 +37,9 @@ public class PdfRelatorioAtividade {
                 preencherCampo(acroForm, "campoRelatorio", dados.getRelatorio());
                 preencherCampo(acroForm, "campoConsideracoesFinais", dados.getConsideracoesFinais());
                 preencherCampo(acroForm, "campoContatoInstituicao", dados.getContatoDaInstituicao());
+
+                String dataHoje = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("pt", "BR")).format(new Date());
+                preencherCampo(acroForm, "cidadeData", "Monteiro-PB, " + dataHoje);
                 
                 acroForm.flatten();
             }
