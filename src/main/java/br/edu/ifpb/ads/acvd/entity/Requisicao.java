@@ -49,4 +49,7 @@ public class Requisicao {
     @Column(precision = 10, scale = 2)
     private BigDecimal inscricaoValor;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "termo_responsabilidade_id")
+    private TermoResponsabilidade termoResponsabilidade;
 }

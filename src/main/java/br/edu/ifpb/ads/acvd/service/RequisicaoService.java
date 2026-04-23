@@ -3,13 +3,16 @@ package br.edu.ifpb.ads.acvd.service;
 import br.edu.ifpb.ads.acvd.dto.DiscenteParticipanteDTO;
 import br.edu.ifpb.ads.acvd.dto.RequisicaoDTO;
 import br.edu.ifpb.ads.acvd.dto.RequisicaoDetalhesDTO;
+import br.edu.ifpb.ads.acvd.dto.TermoResponsabilidadeDTO;
 import br.edu.ifpb.ads.acvd.entity.*;
 import br.edu.ifpb.ads.acvd.exception.RegraDeNegocioException;
 import br.edu.ifpb.ads.acvd.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -27,6 +30,8 @@ public class RequisicaoService {
     private final ContaBancariaRepository contaBancariaRepository;
     private final DocumentoRepository documentoRepository;
     private final ResponsavelLegalRepository responsavelLegalRepository;
+    private final TermoResponsabilidadeService termoResponsabilidadeService;
+
 
     @Transactional
     public RequisicaoDTO.Response adicionarDiscenteAViagem(UUID servidorId, UUID viagemId, RequisicaoDTO.AdicionarDiscente dto) throws RegraDeNegocioException {
@@ -150,5 +155,56 @@ public class RequisicaoService {
                     return new DiscenteParticipanteDTO(discente, conta);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public TermoResponsabilidadeDTO uploadTermoResponsabilidade(UUID discenteId, UUID requisicaoId, MultipartFile file) throws Exception {
+        Requisicao requisicao = requisicaoRepository.findById(requisicaoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Requisição não encontrada."));
+
+        // Regra de Negócio: Somente o dono da requisição pode fazer upload
+        if (!requisicao.getDiscente().getUserId().equals(discenteId)) {
+            throw new RegraDeNegocioException("Você não tem permissão para alterar esta requisição.");
+        }
+
+        // Regra de Negócio: Remove o antigo antes de colocar o novo
+        if (requisicao.getTermoResponsabilidade() != null) {
+            termoResponsabilidadeService.removerArquivoFisico(requisicao.getTermoResponsabilidade());
+            requisicao.setTermoResponsabilidade(null);
+            requisicaoRepository.saveAndFlush(requisicao); // Limpa do banco
+        }
+
+        // Delegação de I/O para o serviço especialista
+        String prefixo = "termo_req_" + requisicaoId;
+        TermoResponsabilidade termo = termoResponsabilidadeService.processarUpload(file, prefixo);
+
+        // Vincula e salva
+        requisicao.setTermoResponsabilidade(termo);
+        requisicaoRepository.save(requisicao);
+
+        return new TermoResponsabilidadeDTO(termo);
+    }
+
+    @Transactional(readOnly = true)
+    public Resource baixarTermoResponsabilidade(UUID userId, UUID requisicaoId) throws RegraDeNegocioException {
+        Requisicao requisicao = requisicaoRepository.findById(requisicaoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Requisição não encontrada."));
+
+        // Segurança 1: É o discente dono da requisição?
+        boolean isDono = requisicao.getDiscente().getUserId().equals(userId);
+
+        // Segurança 2: É o servidor coordenador/responsável da viagem?
+        boolean isResponsavelViagem = requisicao.getViagem().getResponsavel().getUserId().equals(userId);
+
+        if (!isDono && !isResponsavelViagem) {
+            throw new RegraDeNegocioException("Não tem permissão para descarregar o termo de responsabilidade desta requisição.");
+        }
+
+        TermoResponsabilidade termo = requisicao.getTermoResponsabilidade();
+        if (termo == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Esta requisição ainda não possui um Termo de Responsabilidade anexado.");
+        }
+
+        return termoResponsabilidadeService.carregarArquivo(termo);
     }
 }

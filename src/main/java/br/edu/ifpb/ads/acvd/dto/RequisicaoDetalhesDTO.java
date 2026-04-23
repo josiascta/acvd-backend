@@ -17,7 +17,8 @@ public record RequisicaoDetalhesDTO(
         DiscenteInfo discente,
         ContaInfo contaBancaria,
         DocumentoInfo documentoDiscente,
-        ResponsavelInfo responsavelLegal
+        ResponsavelInfo responsavelLegal,
+        TermoResponsabilidadeDTO termoResponsabilidade
 ) {
     public RequisicaoDetalhesDTO(
             Requisicao requisicao,
@@ -36,7 +37,8 @@ public record RequisicaoDetalhesDTO(
                 new DiscenteInfo(discente),
                 conta != null ? new ContaInfo(conta) : null,
                 docDiscente != null ? new DocumentoInfo(docDiscente) : null,
-                responsavel != null ? new ResponsavelInfo(responsavel, docResponsavel) : null
+                responsavel != null ? new ResponsavelInfo(responsavel, docResponsavel) : null,
+                requisicao.getTermoResponsabilidade() != null ? new TermoResponsabilidadeDTO(requisicao.getTermoResponsabilidade()) : null
         );
     }
 
