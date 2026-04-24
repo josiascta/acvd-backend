@@ -103,4 +103,16 @@ public class RequisicaoController {
 
         return ResponseEntity.ok(dto);
     }
+
+    @DeleteMapping("/{requisicaoId}")
+    public ResponseEntity<Void> removerDiscenteDaViagem(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID requisicaoId) throws RegraDeNegocioException {
+
+        UUID servidorId = UUID.fromString(jwt.getSubject());
+
+        requisicaoService.removerDiscenteDaViagem(servidorId, requisicaoId);
+
+        return ResponseEntity.noContent().build();
+    }
 }

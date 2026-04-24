@@ -20,7 +20,8 @@ public class RequisicaoDTO {
             StatusRequisicao status,
             String motivoReprovacao,
             BigDecimal valorDiaria,
-            BigDecimal inscricaoValor
+            BigDecimal inscricaoValor,
+            TermoResponsabilidadeDTO termoResponsabilidade
     ) {
         public Response(Requisicao req) {
             this(
@@ -32,7 +33,8 @@ public class RequisicaoDTO {
                     req.getStatus(),
                     req.getMotivoReprovacao(),
                     req.getValorDiaria(),
-                    req.getInscricaoValor()
+                    req.getInscricaoValor(),
+                    req.getTermoResponsabilidade() != null ? new TermoResponsabilidadeDTO(req.getTermoResponsabilidade()) : null
             );
         }
     }

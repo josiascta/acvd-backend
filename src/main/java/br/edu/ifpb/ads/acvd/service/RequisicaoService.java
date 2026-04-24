@@ -207,4 +207,29 @@ public class RequisicaoService {
 
         return termoResponsabilidadeService.carregarArquivo(termo);
     }
+
+    @Transactional
+    public void removerDiscenteDaViagem(UUID servidorId, UUID requisicaoId) throws RegraDeNegocioException {
+        // 1. Procurar a requisição
+        Requisicao requisicao = requisicaoRepository.findById(requisicaoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Requisição não encontrada."));
+
+        // 2. Validar se o utilizador autenticado é o responsável pela viagem
+        if (!requisicao.getViagem().getResponsavel().getUserId().equals(servidorId)) {
+            throw new RegraDeNegocioException("Não tem permissão para remover alunos desta viagem.");
+        }
+
+        // 3. Regra de Negócio: Impedir a remoção se a requisição já estiver APROVADA
+        if (requisicao.getStatus() == StatusRequisicao.APROVADA) {
+            throw new RegraDeNegocioException("Não é possível remover um discente cuja requisição já se encontre aprovada.");
+        }
+
+        // 4. Limpeza: Se existir um Termo de Responsabilidade associado, apagar o ficheiro físico do disco
+        if (requisicao.getTermoResponsabilidade() != null) {
+            termoResponsabilidadeService.removerArquivoFisico(requisicao.getTermoResponsabilidade());
+        }
+
+        // 5. Eliminar a requisição (o CascadeType.ALL na entidade tratará de apagar o registo do TermoResponsabilidade na BD)
+        requisicaoRepository.delete(requisicao);
+    }
 }
