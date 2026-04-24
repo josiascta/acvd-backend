@@ -115,4 +115,21 @@ public class RequisicaoController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/viagens/{viagemId}/documentos/download-zip")
+    public ResponseEntity<byte[]> downloadDocumentosViagemZip(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID viagemId) throws Exception {
+
+        UUID servidorId = UUID.fromString(jwt.getSubject());
+
+        byte[] zipBytes = requisicaoService.baixarDocumentosViagemZip(servidorId, viagemId);
+
+        String nomeArquivo = "Documentos_Viagem_" + viagemId.toString().substring(0, 8) + ".zip";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"")
+                .contentType(MediaType.valueOf("application/zip"))
+                .body(zipBytes);
+    }
 }

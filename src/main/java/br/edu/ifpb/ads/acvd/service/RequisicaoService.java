@@ -15,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -162,23 +165,19 @@ public class RequisicaoService {
         Requisicao requisicao = requisicaoRepository.findById(requisicaoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Requisição não encontrada."));
 
-        // Regra de Negócio: Somente o dono da requisição pode fazer upload
         if (!requisicao.getDiscente().getUserId().equals(discenteId)) {
             throw new RegraDeNegocioException("Você não tem permissão para alterar esta requisição.");
         }
 
-        // Regra de Negócio: Remove o antigo antes de colocar o novo
         if (requisicao.getTermoResponsabilidade() != null) {
             termoResponsabilidadeService.removerArquivoFisico(requisicao.getTermoResponsabilidade());
             requisicao.setTermoResponsabilidade(null);
-            requisicaoRepository.saveAndFlush(requisicao); // Limpa do banco
+            requisicaoRepository.saveAndFlush(requisicao);
         }
 
-        // Delegação de I/O para o serviço especialista
         String prefixo = "termo_req_" + requisicaoId;
         TermoResponsabilidade termo = termoResponsabilidadeService.processarUpload(file, prefixo);
 
-        // Vincula e salva
         requisicao.setTermoResponsabilidade(termo);
         requisicaoRepository.save(requisicao);
 
@@ -190,10 +189,8 @@ public class RequisicaoService {
         Requisicao requisicao = requisicaoRepository.findById(requisicaoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Requisição não encontrada."));
 
-        // Segurança 1: É o discente dono da requisição?
         boolean isDono = requisicao.getDiscente().getUserId().equals(userId);
 
-        // Segurança 2: É o servidor coordenador/responsável da viagem?
         boolean isResponsavelViagem = requisicao.getViagem().getResponsavel().getUserId().equals(userId);
 
         if (!isDono && !isResponsavelViagem) {
@@ -210,26 +207,90 @@ public class RequisicaoService {
 
     @Transactional
     public void removerDiscenteDaViagem(UUID servidorId, UUID requisicaoId) throws RegraDeNegocioException {
-        // 1. Procurar a requisição
         Requisicao requisicao = requisicaoRepository.findById(requisicaoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Requisição não encontrada."));
 
-        // 2. Validar se o utilizador autenticado é o responsável pela viagem
         if (!requisicao.getViagem().getResponsavel().getUserId().equals(servidorId)) {
             throw new RegraDeNegocioException("Não tem permissão para remover alunos desta viagem.");
         }
 
-        // 3. Regra de Negócio: Impedir a remoção se a requisição já estiver APROVADA
         if (requisicao.getStatus() == StatusRequisicao.APROVADA) {
             throw new RegraDeNegocioException("Não é possível remover um discente cuja requisição já se encontre aprovada.");
         }
 
-        // 4. Limpeza: Se existir um Termo de Responsabilidade associado, apagar o ficheiro físico do disco
         if (requisicao.getTermoResponsabilidade() != null) {
             termoResponsabilidadeService.removerArquivoFisico(requisicao.getTermoResponsabilidade());
         }
 
-        // 5. Eliminar a requisição (o CascadeType.ALL na entidade tratará de apagar o registo do TermoResponsabilidade na BD)
         requisicaoRepository.delete(requisicao);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] baixarDocumentosViagemZip(UUID servidorId, UUID viagemId) throws RegraDeNegocioException, IOException {
+        Viagem viagem = viagemRepository.findById(viagemId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Viagem não encontrada."));
+
+        if (!viagem.getResponsavel().getUserId().equals(servidorId)) {
+            throw new RegraDeNegocioException("Você não tem permissão para baixar os documentos desta viagem.");
+        }
+
+        List<Requisicao> requisicoes = requisicaoRepository.findByViagemId(viagemId);
+
+        if (requisicoes.isEmpty()) {
+            throw new RegraDeNegocioException("Não há discentes vinculados a esta viagem.");
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos)) {
+            requisicoes.forEach(req -> {
+                User discente = req.getDiscente();
+                String nomeLimpo = discente.getNome().replaceAll("[^a-zA-Z0-9 ]", "").trim();
+                String pastaAluno = nomeLimpo + " - " + discente.getMatricula() + "/";
+
+                try {
+                    zos.putNextEntry(new java.util.zip.ZipEntry(pastaAluno));
+                    zos.closeEntry();
+
+                    documentoRepository.findByUserUserId(discente.getUserId()).ifPresent(docPessoal -> {
+                        adicionarArquivoAoZip(zos, docPessoal.getCaminhoDoArquivo(),
+                                pastaAluno + "Identidade_Discente_" + docPessoal.getNomeOriginal());
+                    });
+
+                    TermoResponsabilidade termo = req.getTermoResponsabilidade();
+                    if (termo != null) {
+                        adicionarArquivoAoZip(zos, termo.getCaminhoArquivo(),
+                                pastaAluno + "Anexo_V_Termo_Responsabilidade.pdf");
+                    }
+
+                    responsavelLegalRepository.findByUserUserId(discente.getUserId()).ifPresent(responsavel -> {
+                        documentoRepository.findByResponsavelLegalId(responsavel.getId()).ifPresent(docResp -> {
+                            adicionarArquivoAoZip(zos, docResp.getCaminhoDoArquivo(),
+                                    pastaAluno + "Identidade_Responsavel_" + docResp.getNomeOriginal());
+                        });
+                    });
+
+                } catch (IOException e) {
+                    System.err.println("Erro ao processar documentos do discente: " + discente.getNome());
+                }
+            });
+        }
+
+        return baos.toByteArray();
+    }
+
+    private void adicionarArquivoAoZip(java.util.zip.ZipOutputStream zos, String caminhoFisico, String nomeNoZip) {
+        if (caminhoFisico == null || caminhoFisico.isBlank()) return;
+
+        try {
+            java.nio.file.Path path = java.nio.file.Paths.get(caminhoFisico);
+            if (java.nio.file.Files.exists(path)) {
+                java.util.zip.ZipEntry entry = new java.util.zip.ZipEntry(nomeNoZip);
+                zos.putNextEntry(entry);
+                java.nio.file.Files.copy(path, zos);
+                zos.closeEntry();
+            }
+        } catch (IOException e) {
+            System.err.println("Erro ao adicionar arquivo ao ZIP (" + caminhoFisico + "): " + e.getMessage());
+        }
     }
 }

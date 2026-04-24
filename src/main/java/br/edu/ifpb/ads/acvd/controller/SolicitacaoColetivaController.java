@@ -40,10 +40,8 @@ public class SolicitacaoColetivaController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID id) {
 
-        // Pega o ID do usuário logado
         UUID userId = UUID.fromString(jwt.getSubject());
 
-        // Passa o ID da solicitação E o ID do usuário logado
         byte[] pdfBytes = service.gerarPdfSobDemanda(id, userId);
 
         return ResponseEntity.ok()

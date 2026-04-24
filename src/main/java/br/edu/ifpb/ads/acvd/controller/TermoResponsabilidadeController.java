@@ -19,7 +19,6 @@ public class TermoResponsabilidadeController {
         this.termoResponsabilidadeService = termoResponsabilidadeService;
     }
 
-    // 1. GERAÇÃO A PARTIR DA SOLICITAÇÃO INDIVIDUAL (Dados já vêm no Body)
     @PostMapping("/individual")
     public ResponseEntity<byte[]> gerarTermoIndividual(@RequestBody SolicitacaoIndividualDTO dados) {
         try {
@@ -37,7 +36,6 @@ public class TermoResponsabilidadeController {
         }
     }
 
-    // 2. GERAÇÃO A PARTIR DA VIAGEM COLETIVA (Busca dados no BD)
     @GetMapping("/coletiva/{viagemId}/aluno/{alunoId}")
     public ResponseEntity<byte[]> baixarTermoIndividualColetiva(
             @PathVariable UUID viagemId,
