@@ -102,20 +102,34 @@ public class PdfTermoResponsabilidadeService {
         Viagem viagem = viagemRepository.findById(viagemId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Viagem não encontrada"));
 
-        SolicitacaoIndividualDTO dadosParaPdf = new SolicitacaoIndividualDTO(
-                null, viagem.getId(), new Date(), null, null, null, null,
-                "Solicitação via Viagem Coletiva", new Date(), null,
-                aluno.getNome(), aluno.getNumeroCpf(), aluno.getMatricula(), aluno.getCurso(),
-                aluno.getEmail(), aluno.getTelefone(), "Não informado",
-                "Campus Monteiro", aluno.getTurmaPeriodo(), viagem.getTipoViagem().toString(),
-                viagem.getItinerarios().isEmpty() ? "Não informado" : viagem.getItinerarios().get(0).getLocal(),
-                (aluno.getResponsavelLegal() != null) ? aluno.getResponsavelLegal().getNome() : nomeResp,
-                (aluno.getResponsavelLegal() != null) ? aluno.getResponsavelLegal().getContato() : contatoResp,
-                null, null, null,
-                false, false, false, false, false,
-                (viagem.getDataPartida() != null) ? viagem.getDataPartida().toString() : "", "",
-                (viagem.getDataRetorno() != null) ? viagem.getDataRetorno().toString() : "", ""
-        );
+       // Melhore a lógica para priorizar o que vem do modal (parâmetros da URL)
+String finalNomeResp = (nomeResp != null && !nomeResp.isBlank()) 
+    ? nomeResp 
+    : (aluno.getResponsavelLegal() != null ? aluno.getResponsavelLegal().getNome() : "Não informado");
+
+String finalContatoResp = (contatoResp != null && !contatoResp.isBlank()) 
+    ? contatoResp 
+    : (aluno.getResponsavelLegal() != null ? aluno.getResponsavelLegal().getContato() : "Não informado");
+
+SolicitacaoIndividualDTO dadosParaPdf = new SolicitacaoIndividualDTO(
+        null, viagem.getId(), new Date(), null, null, null, null,
+        "Solicitação via Viagem Coletiva", new Date(), null,
+        aluno.getNome(), aluno.getNumeroCpf(), aluno.getMatricula(), aluno.getCurso(),
+        aluno.getEmail(), aluno.getTelefone(), "Não informado",
+        "Campus Monteiro", aluno.getTurmaPeriodo(), 
+        (viagem.getItinerarios() != null && !viagem.getItinerarios().isEmpty()) 
+            ? viagem.getItinerarios().get(0).getDescricao() 
+            : "Descrição não informada",
+        viagem.getItinerarios().isEmpty() ? "Não informado" : viagem.getItinerarios().get(0).getLocal(),
+        
+        finalNomeResp, // Campo do Responsável
+        finalContatoResp, // Campo do Contato
+        
+        null, null, null,
+        false, false, false, false, false,
+        (viagem.getDataPartida() != null) ? viagem.getDataPartida().toString() : "", "",
+        (viagem.getDataRetorno() != null) ? viagem.getDataRetorno().toString() : "", ""
+);
 
         return gerarPdfTermo(dadosParaPdf);
     }

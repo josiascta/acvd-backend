@@ -65,19 +65,19 @@ public class ViagemService {
         Viagem viagemSalva = viagemRepository.save(viagem);
         return new ViagemDTO(viagemSalva);
     }
-
+    @Transactional(readOnly = true)
     public List<ViagemDTO> listarTodas() {
         return viagemRepository.findAll().stream()
                 .map(ViagemDTO::new)
                 .collect(Collectors.toList());
     }
-
+    @Transactional(readOnly = true)
     public ViagemDTO buscarPorId(UUID viagemId) {
         Viagem viagem = viagemRepository.findById(viagemId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Viagem não encontrada."));
         return new ViagemDTO(viagem);
     }
-
+    @Transactional(readOnly = true)
     public List<ViagemDTO> listarViagensDoServidor(UUID servidorId) {
         return viagemRepository.findAll().stream()
                 .filter(v -> v.getResponsavel().getUserId().equals(servidorId))
