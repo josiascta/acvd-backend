@@ -53,8 +53,9 @@ public class PdfTermoResponsabilidadeService {
                     java.time.LocalDate nascimento = dataNasc.toInstant()
                             .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
                     idade = java.time.Period.between(nascimento, java.time.LocalDate.now()).getYears();
+                    // LOG DE DEPURAÇÃO: Verifique isso no console do Spring
+                    System.out.println("DEBUG: Aluno " + dados.nome() + " - Nascimento: " + nascimento + " - Idade calculada: " + idade);
                 }
-
                 preencherCampo(acroForm, "nomeAluno", dados.nome());
                 preencherCampo(acroForm, "curso", dados.curso());
                 preencherCampo(acroForm, "matricula", dados.matricula());
@@ -64,14 +65,23 @@ public class PdfTermoResponsabilidadeService {
                 preencherCampo(acroForm, "local", dados.localidadeEvento());
                 preencherCampo(acroForm, "periodo", "de " + dados.dataSaida() + " a " + dados.dataChegada());
 
+               // Dentro de gerarPdfTermo
                 if (idade >= 18) {
-                    preencherCampo(acroForm, "contatoMaior", dados.telefone());
+                    // Para MAIORES de idade
+                    preencherCampo(acroForm, "cidadeData", "Monteiro-PB, ");
+                    preencherCampo(acroForm, "contatoMaior", dados.contatoFamiliar());
+                    // Limpa os campos de menor para não haver sobreposição
                     preencherCampo(acroForm, "nomeFamiliar", "");
                     preencherCampo(acroForm, "contatoFamiliar", "");
                 } else {
+                    // Para MENORES de idade
                     preencherCampo(acroForm, "nomeFamiliar", dados.nomeFamiliar());
                     preencherCampo(acroForm, "contatoFamiliar", dados.contatoFamiliar());
+                    
+                    // Limpa o campo de maior (contatoMaior)
+                    // Se cidadeData for comum aos dois, mantenha fora do IF
                     preencherCampo(acroForm, "contatoMaior", "");
+                    preencherCampo(acroForm, "cidadeData", "Monteiro-PB, " );
                 }
 
                 String dataHoje = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", new Locale("pt", "BR")).format(new Date());
