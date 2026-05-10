@@ -1,5 +1,6 @@
 package br.edu.ifpb.ads.acvd.service;
 
+import br.edu.ifpb.ads.acvd.config.BeneficiosConfig;
 import br.edu.ifpb.ads.acvd.dto.DiscenteParticipanteDTO;
 import br.edu.ifpb.ads.acvd.dto.RequisicaoDTO;
 import br.edu.ifpb.ads.acvd.dto.RequisicaoDetalhesDTO;
@@ -18,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,6 +37,7 @@ public class RequisicaoService {
     private final ResponsavelLegalRepository responsavelLegalRepository;
     private final TermoResponsabilidadeService termoResponsabilidadeService;
 
+    private final BeneficiosConfig beneficiosConfig;
 
     @Transactional
     public RequisicaoDTO.Response adicionarDiscenteAViagem(UUID servidorId, UUID viagemId, RequisicaoDTO.AdicionarDiscente dto) throws RegraDeNegocioException {
@@ -50,8 +53,11 @@ public class RequisicaoService {
         requisicao.setDiscente(discente);
         requisicao.setViagem(viagem);
         requisicao.setStatus(StatusRequisicao.AGUARDANDO_ENVIO);
-        requisicao.setValorDiaria(dto.valorDiaria());
+
+        requisicao.setTipoAfastamento(dto.tipoAfastamento());
         requisicao.setInscricaoValor(dto.inscricaoValor());
+
+        this.calcularValoresFinanceiros(requisicao);
 
         return new RequisicaoDTO.Response(requisicaoRepository.save(requisicao));
     }
@@ -70,8 +76,11 @@ public class RequisicaoService {
         requisicao.setDiscente(discente);
         requisicao.setViagem(viagem);
         requisicao.setStatus(StatusRequisicao.AGUARDANDO_ENVIO);
-        requisicao.setValorDiaria(dto.valorDiaria());
+
+        requisicao.setTipoAfastamento(dto.tipoAfastamento());
         requisicao.setInscricaoValor(dto.inscricaoValor());
+
+        this.calcularValoresFinanceiros(requisicao);
 
         return new RequisicaoDTO.Response(requisicaoRepository.save(requisicao));
     }
@@ -291,6 +300,39 @@ public class RequisicaoService {
             }
         } catch (IOException e) {
             System.err.println("Erro ao adicionar arquivo ao ZIP (" + caminhoFisico + "): " + e.getMessage());
+        }
+    }
+
+    private void calcularValoresFinanceiros(Requisicao requisicao) {
+        // Converte os valores da configuração (Double) para BigDecimal
+        BigDecimal valorBase = BigDecimal.valueOf(beneficiosConfig.getValorDiariaCnpq());
+        BigDecimal tetoInscricao = BigDecimal.valueOf(beneficiosConfig.getTetoInscricao());
+
+        // 1. Cálculo da Diária com base no Tipo de Afastamento
+        if (requisicao.getTipoAfastamento() != null) {
+            String nomeEnum = requisicao.getTipoAfastamento().name();
+            // Busca o percentual no Map da configuração. Se não achar, usa 0.0
+            Double percentualDouble = beneficiosConfig.getPercentuais().getOrDefault(nomeEnum, 0.0);
+            BigDecimal percentual = BigDecimal.valueOf(percentualDouble);
+
+            // Aplica a regra: valorBase * percentual
+            requisicao.setValorDiaria(valorBase.multiply(percentual));
+        } else {
+            requisicao.setValorDiaria(BigDecimal.ZERO);
+        }
+
+        // 2. Lógica da Inscrição (Apoio financeiro para eventos)
+        if (requisicao.getInscricaoValor() != null && requisicao.getInscricaoValor().compareTo(BigDecimal.ZERO) > 0) {
+            requisicao.setSolicitaInscricao(true);
+
+            // Regra do Art. 9: Se o valor solicitado for maior que o teto (R$ 285), trava no teto
+            if (requisicao.getInscricaoValor().compareTo(tetoInscricao) > 0) {
+                requisicao.setInscricaoValor(tetoInscricao);
+            }
+        } else {
+            // Se veio nulo ou menor/igual a zero, não solicita inscrição
+            requisicao.setSolicitaInscricao(false);
+            requisicao.setInscricaoValor(BigDecimal.ZERO);
         }
     }
 }

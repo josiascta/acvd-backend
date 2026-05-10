@@ -2,6 +2,7 @@ package br.edu.ifpb.ads.acvd.dto;
 
 import br.edu.ifpb.ads.acvd.entity.Requisicao;
 import br.edu.ifpb.ads.acvd.entity.StatusRequisicao;
+import br.edu.ifpb.ads.acvd.entity.TipoAfastamento;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,7 +22,9 @@ public class RequisicaoDTO {
             String motivoReprovacao,
             BigDecimal valorDiaria,
             BigDecimal inscricaoValor,
-            TermoResponsabilidadeDTO termoResponsabilidade
+            TermoResponsabilidadeDTO termoResponsabilidade,
+            TipoAfastamento tipoAfastamento,
+            Boolean solicitaInscrica
     ) {
         public Response(Requisicao req) {
             this(
@@ -34,7 +37,9 @@ public class RequisicaoDTO {
                     req.getMotivoReprovacao(),
                     req.getValorDiaria(),
                     req.getInscricaoValor(),
-                    req.getTermoResponsabilidade() != null ? new TermoResponsabilidadeDTO(req.getTermoResponsabilidade()) : null
+                    req.getTermoResponsabilidade() != null ? new TermoResponsabilidadeDTO(req.getTermoResponsabilidade()) : null,
+                    req.getTipoAfastamento(),
+                    req.getSolicitaInscricao()
             );
         }
     }
@@ -43,7 +48,7 @@ public class RequisicaoDTO {
             @NotBlank(message = "A matrícula do discente é obrigatória")
             String matriculaDiscente,
 
-            BigDecimal valorDiaria,
+            TipoAfastamento tipoAfastamento,
             BigDecimal inscricaoValor
     ) {}
 
@@ -58,7 +63,7 @@ public class RequisicaoDTO {
             @Email(message = "Formato de e-mail inválido")
             String emailDiscente,
 
-            BigDecimal valorDiaria,
+            TipoAfastamento tipoAfastamento,
             BigDecimal inscricaoValor
     ) {}
 }
