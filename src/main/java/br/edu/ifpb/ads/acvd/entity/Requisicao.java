@@ -52,4 +52,11 @@ public class Requisicao {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "termo_responsabilidade_id")
     private TermoResponsabilidade termoResponsabilidade;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_afastamento")
+    private TipoAfastamento tipoAfastamento;
+
+    @Column(name = "solicita_inscricao")
+    private Boolean solicitaInscricao;
 }
