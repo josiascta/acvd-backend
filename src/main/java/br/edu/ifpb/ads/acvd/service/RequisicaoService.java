@@ -304,33 +304,26 @@ public class RequisicaoService {
     }
 
     private void calcularValoresFinanceiros(Requisicao requisicao) {
-        // Converte os valores da configuração (Double) para BigDecimal
         BigDecimal valorBase = BigDecimal.valueOf(beneficiosConfig.getValorDiariaCnpq());
         BigDecimal tetoInscricao = BigDecimal.valueOf(beneficiosConfig.getTetoInscricao());
 
-        // 1. Cálculo da Diária com base no Tipo de Afastamento
         if (requisicao.getTipoAfastamento() != null) {
             String nomeEnum = requisicao.getTipoAfastamento().name();
-            // Busca o percentual no Map da configuração. Se não achar, usa 0.0
             Double percentualDouble = beneficiosConfig.getPercentuais().getOrDefault(nomeEnum, 0.0);
             BigDecimal percentual = BigDecimal.valueOf(percentualDouble);
 
-            // Aplica a regra: valorBase * percentual
             requisicao.setValorDiaria(valorBase.multiply(percentual));
         } else {
             requisicao.setValorDiaria(BigDecimal.ZERO);
         }
 
-        // 2. Lógica da Inscrição (Apoio financeiro para eventos)
         if (requisicao.getInscricaoValor() != null && requisicao.getInscricaoValor().compareTo(BigDecimal.ZERO) > 0) {
             requisicao.setSolicitaInscricao(true);
 
-            // Regra do Art. 9: Se o valor solicitado for maior que o teto (R$ 285), trava no teto
             if (requisicao.getInscricaoValor().compareTo(tetoInscricao) > 0) {
                 requisicao.setInscricaoValor(tetoInscricao);
             }
         } else {
-            // Se veio nulo ou menor/igual a zero, não solicita inscrição
             requisicao.setSolicitaInscricao(false);
             requisicao.setInscricaoValor(BigDecimal.ZERO);
         }
