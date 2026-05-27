@@ -1,20 +1,21 @@
 package br.edu.ifpb.ads.acvd.service;
 
-
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import br.edu.ifpb.ads.acvd.dto.RelatorioDiscenteDTO;
 import br.edu.ifpb.ads.acvd.entity.RelatorioViagemDiscente;
 import br.edu.ifpb.ads.acvd.entity.SolicitacaoIndividual;
 import br.edu.ifpb.ads.acvd.repository.RelatorioDiscenteRepository;
 import br.edu.ifpb.ads.acvd.repository.SolicitacaoIndividualRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
-
 
 @Service
 public class RelatorioDiscenteService {
@@ -26,7 +27,7 @@ public class RelatorioDiscenteService {
     private SolicitacaoIndividualRepository solicitacaoRepository;
 
     @Autowired
-    private PdfSolicitacaoIndividualService pdfService; // Injeção do serviço de PDF
+    private PdfSolicitacaoIndividualService pdfService; 
 
     @Transactional
     public RelatorioViagemDiscente salvar(RelatorioDiscenteDTO dto) {
@@ -38,7 +39,7 @@ public class RelatorioDiscenteService {
         RelatorioViagemDiscente relatorio = repository.findBySolicitacaoId(dto.solicitacaoId())
             .orElse(new RelatorioViagemDiscente());
 
-        // 3. Mapeamento dos campos
+        // 3. Mapeamento dos campos normais
         relatorio.setSolicitacao(solicitacao);
         relatorio.setDescricaoAtividades(dto.descricaoAtividades());
         relatorio.setValorAjudaCusto(dto.valorAjudaCusto());
@@ -50,35 +51,55 @@ public class RelatorioDiscenteService {
         relatorio.setDataRelatorio(LocalDate.now());
 
         // 4. Salva no Banco de Dados
-        RelatorioViagemDiscente relatorioSalvo = repository.save(relatorio);
+        // REMOVIDO: Toda a gravação do arquivo físico na pasta uploads/
+        return repository.save(relatorio);
+    }
 
-        // 5. GERA E SALVA O ARQUIVO FÍSICO NA PASTA UPLOADS
+    // NOVO MÉTODO: Gera o PDF do relatório em memória na hora do download
+    public Resource carregarArquivoRelatorio(UUID solicitacaoId) {
+        RelatorioViagemDiscente relatorio = repository.findBySolicitacaoId(solicitacaoId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relatório não encontrado"));
+        
         try {
-            // Gera os bytes do PDF preenchido
+            // Monta o DTO com os dados do banco para preencher o PDF
+            RelatorioDiscenteDTO dto = new RelatorioDiscenteDTO(
+                relatorio.getSolicitacao().getId(),
+                relatorio.getDescricaoAtividades(),
+                relatorio.getValorAjudaCusto(),
+                relatorio.getAjudaCustoExtenso(),
+                relatorio.getValorPassagens(),
+                relatorio.getPassagensExtenso(),
+                relatorio.getNumeroBilhetes(),
+                relatorio.getObservacoes()
+            );
+            
+            // Gera os bytes do PDF sob demanda
             byte[] pdfBytes = pdfService.preencherAnexoVII(dto);
-
-            // Define o nome do arquivo (ex: id-relatorio-discente.pdf)
-            // Usamos o ID da solicitação para manter o padrão que você já tem
-            String nomeArquivo = solicitacao.getId().toString() + "-relatorio-discente.pdf";
             
-            // Define o caminho (Cria a pasta uploads se não existir)
-            java.nio.file.Path path = java.nio.file.Paths.get("uploads/" + nomeArquivo);
-            java.nio.file.Files.createDirectories(path.getParent());
+            // Retorna o recurso virtual usando o CustomByteArrayResource que você já tem no projeto
+            return new CustomByteArrayResource(pdfBytes, "Relatorio_Discente_" + solicitacaoId + ".pdf");
             
-            // Escreve o arquivo no disco
-            java.nio.file.Files.write(path, pdfBytes);
-            
-            System.out.println("Arquivo salvo em: " + path.toAbsolutePath());
-
         } catch (Exception e) {
-            // Log de erro, mas não interrompe a transação do banco se o PDF falhar
-            System.err.println("Erro ao salvar arquivo físico: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao gerar PDF do Relatório", e);
         }
-
-        return relatorioSalvo;
     }
 
     public Optional<RelatorioViagemDiscente> buscarPorSolicitacaoId(UUID solicitacaoId) {
         return repository.findBySolicitacaoId(solicitacaoId);
+    }
+
+    // CLASSE AUXILIAR INTERNA: Mesma estrutura usada para dar nome ao arquivo em memória
+    private static class CustomByteArrayResource extends ByteArrayResource {
+        private final String filename;
+
+        public CustomByteArrayResource(byte[] byteArray, String filename) {
+            super(byteArray);
+            this.filename = filename;
+        }
+
+        @Override
+        public String getFilename() {
+            return this.filename;
+        }
     }
 }

@@ -63,11 +63,11 @@ public record SolicitacaoIndividualDTO(
         this(
                 entidade.getId(),
                 entidade.getViagem() != null ? entidade.getViagem().getId() : null,
-                entidade.getData(),
-                entidade.getCaminhoArquivo(),
+                entidade.getSolicitadoEm(), // No lugar de getData(), usamos o solicitadoEm para não passar null
+                "EM_MEMORIA",               // No lugar de getCaminhoArquivo()
                 entidade.getCaminhoArquivoTermo(),
-                entidade.getTamanho(),
-                entidade.getHash(),
+                "0",                        // No lugar de getTamanho()
+                "GERADO_SOB_DEMANDA",
                 entidade.getJustificativa(),
                 entidade.getSolicitadoEm(),
                 entidade.getAfastamento(),

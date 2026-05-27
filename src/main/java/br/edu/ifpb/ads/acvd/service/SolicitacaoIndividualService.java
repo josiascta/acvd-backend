@@ -62,7 +62,7 @@ public class SolicitacaoIndividualService {
         solicitacao.setConta(dto.conta());
         solicitacao.setJustificativa(dto.justificativa());
         solicitacao.setSolicitadoEm(dto.solicitadoEm());
-        solicitacao.setData(new Date());
+        
         solicitacao.setAfastamento(dto.afastamento());
         
         solicitacao.setSolicitaInscricao(dto.solicitaInscricao());
@@ -75,13 +75,7 @@ public class SolicitacaoIndividualService {
         solicitacao.setDataChegada(dto.dataChegada());
         solicitacao.setHoraChegada(dto.horaChegada());
 
-        // ====================================================================
-        // SOLUÇÃO DO ERRO 500: Preenche os campos obrigatórios herdados de Anexo
-        // ====================================================================
-        solicitacao.setCaminhoArquivo("EM_MEMORIA"); 
-        solicitacao.setHash("GERADO_SOB_DEMANDA");
-        solicitacao.setTamanho("0");
-        // ====================================================================
+    
 
         SolicitacaoIndividual entidadeSalva = repository.save(solicitacao);
 
