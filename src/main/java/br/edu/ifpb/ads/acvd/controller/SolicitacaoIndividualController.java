@@ -20,46 +20,47 @@ public class SolicitacaoIndividualController {
 
     private final SolicitacaoIndividualService service;
 
-    // 1. Gera os DOIS PDFs (Anexo II e V), salva no banco e retorna o DTO
+    // 1. Gera e salva (Sem alterações)
     @PostMapping("/gerar-e-salvar")
     public ResponseEntity<SolicitacaoIndividualDTO> gerarESalvar(@Valid @RequestBody SolicitacaoIndividualDTO dados) {
         SolicitacaoIndividualDTO salvo = service.gerarESalvarSolicitacao(dados);
         return ResponseEntity.ok(salvo);
     }
 
-    // 2. Download do ANEXO II (Solicitação)
+    // 2. Download do ANEXO II (Modificado internamente para evitar erros de leitura de disco)
     @GetMapping("/{id}/download-solicitacao")
     public ResponseEntity<Resource> downloadSolicitacao(@PathVariable UUID id) {
         Resource resource = service.carregarArquivo(id);
-        return montarRespostaDownload(resource, "Solicitacao_Individual_");
+        // Passamos o nome do arquivo fixo direto aqui para não quebrar no resource.getFilename()
+        return montarRespostaDownload(resource, "Solicitacao_Individual_" + id + ".pdf");
     }
 
-    // 3. Download do ANEXO V (Termo de Responsabilidade)
+    // 3. Download do ANEXO V (Modificado internamente para evitar erros de leitura de disco)
     @GetMapping("/{id}/download-termo")
     public ResponseEntity<Resource> downloadTermo(@PathVariable UUID id) {
         Resource resource = service.carregarArquivoTermo(id); 
-        return montarRespostaDownload(resource, "Termo_Responsabilidade_");
+        return montarRespostaDownload(resource, "Termo_Responsabilidade_" + id + ".pdf");
     }
 
-    // 4. Listar solicitações do discente logado
+    // 4. Listar (Sem alterações)
     @GetMapping("/minhas")
     public ResponseEntity<List<SolicitacaoIndividualDTO>> listarMinhas() {
         List<SolicitacaoIndividualDTO> lista = service.listarPorDiscente();
         return ResponseEntity.ok(lista);
     }
 
-    // 5. Excluir solicitação e arquivos relacionados
+    // 5. Excluir (Sem alterações)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable UUID id) {
         service.excluir(id);
         return ResponseEntity.noContent().build();
     }
 
-    // Método auxiliar para formatar o download do PDF
-    private ResponseEntity<Resource> montarRespostaDownload(Resource resource, String prefixo) {
+    // Método auxiliar adaptado para receber o nome final pronto do arquivo
+    private ResponseEntity<Resource> montarRespostaDownload(Resource resource, String nomeArquivoCompleto) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + prefixo + resource.getFilename() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivoCompleto + "\"")
                 .body(resource);
     }
 }
