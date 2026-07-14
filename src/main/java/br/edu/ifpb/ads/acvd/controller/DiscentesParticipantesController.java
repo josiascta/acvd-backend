@@ -1,7 +1,7 @@
 package br.edu.ifpb.ads.acvd.controller;
 
 import br.edu.ifpb.ads.acvd.dto.DiscenteParticipanteDTO;
-import br.edu.ifpb.ads.acvd.service.PdfDiscentesParticipantesService;
+import br.edu.ifpb.ads.acvd.service.DiscentesParticipantesService;
 import br.edu.ifpb.ads.acvd.service.RequisicaoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -19,9 +19,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/pdf")
 @RequiredArgsConstructor
-public class PdfDiscentesParticipantesController {
+public class DiscentesParticipantesController {
 
-    private final PdfDiscentesParticipantesService pdfService;
+    private final DiscentesParticipantesService pdfService;
     private final RequisicaoService requisicaoService;
 
     @GetMapping("/viagens/{viagemId}/discentes-participantes")

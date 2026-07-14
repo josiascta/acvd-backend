@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.util.List;
 
 @Service
-public class PdfDiscentesParticipantesService {
+public class DiscentesParticipantesService {
 
     private static final int LIMITE_POR_PAGINA = 25;
     private static final String TEMPLATE_PDF = "discentes-participantes.pdf";
