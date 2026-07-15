@@ -5,6 +5,7 @@ import br.edu.ifpb.ads.acvd.service.ResponsavelLegalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -19,12 +20,14 @@ public class ResponsavelLegalController {
 
     private final ResponsavelLegalService responsavelLegalService;
 
+    @PreAuthorize("hasAnyRole('DISCENTE', 'SERVIDOR')")
     @GetMapping
     public ResponseEntity<ResponsavelLegalDTO> obter(@AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(responsavelLegalService.obter(userId));
     }
 
+    @PreAuthorize("hasRole('DISCENTE')")
     @PutMapping
     public ResponseEntity<ResponsavelLegalDTO> salvarDados(@AuthenticationPrincipal Jwt jwt,
                                                            @RequestBody ResponsavelLegalDTO dto) {
@@ -32,6 +35,7 @@ public class ResponsavelLegalController {
         return ResponseEntity.ok(responsavelLegalService.atualizarDados(userId, dto));
     }
 
+    @PreAuthorize("hasRole('DISCENTE')")
     @PostMapping(value = "/documento", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadDocumento(@AuthenticationPrincipal Jwt jwt,
                                                 @RequestParam("file") MultipartFile file) {

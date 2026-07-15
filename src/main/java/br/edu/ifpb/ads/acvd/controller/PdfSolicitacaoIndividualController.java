@@ -5,10 +5,12 @@ import br.edu.ifpb.ads.acvd.service.PdfSolicitacaoIndividualService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/pdf") // Mudei para api/pdf para ficar mais organizado
+@PreAuthorize("hasRole('DISCENTE')")
 public class PdfSolicitacaoIndividualController {
 
     private final PdfSolicitacaoIndividualService pdfService;
@@ -31,6 +33,8 @@ public class PdfSolicitacaoIndividualController {
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(pdfBytes);
 
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }

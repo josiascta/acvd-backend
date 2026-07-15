@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -31,36 +32,42 @@ public class RequisicaoController {
 
     // ENDPOINTS DO SERVIDOR
 
+    @PreAuthorize("hasRole('SERVIDOR')")
     @PostMapping("/viagens/{viagemId}/adicionar-discente")
     public ResponseEntity<RequisicaoDTO.Response> adicionarDiscente(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID viagemId, @Valid @RequestBody RequisicaoDTO.AdicionarDiscente dto) throws RegraDeNegocioException {
         UUID servidorId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.status(HttpStatus.CREATED).body(requisicaoService.adicionarDiscenteAViagem(servidorId, viagemId, dto));
     }
 
+    @PreAuthorize("hasRole('SERVIDOR')")
     @PostMapping("/viagens/{viagemId}/adicionar-discente/email")
     public ResponseEntity<RequisicaoDTO.Response> adicionarDiscentePorEmail(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID viagemId, @Valid @RequestBody RequisicaoDTO.AdicionarDiscentePorEmail dto) throws RegraDeNegocioException {
         UUID servidorId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.status(HttpStatus.CREATED).body(requisicaoService.adicionarDiscenteAViagemPorEmail(servidorId, viagemId, dto));
     }
 
+    @PreAuthorize("hasRole('SERVIDOR')")
     @PatchMapping("/{requisicaoId}/avaliar")
     public ResponseEntity<RequisicaoDTO.Response> avaliarRequisicao(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID requisicaoId, @Valid @RequestBody RequisicaoDTO.Avaliar dto) throws RegraDeNegocioException {
         UUID servidorId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(requisicaoService.avaliarRequisicao(servidorId, requisicaoId, dto));
     }
 
+    @PreAuthorize("hasRole('SERVIDOR')")
     @GetMapping("/viagens/{viagemId}")
     public ResponseEntity<List<RequisicaoDTO.Response>> listarPorViagem(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID viagemId) {
         UUID servidorId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(requisicaoService.listarRequisicoesDaViagem(servidorId, viagemId));
     }
 
+    @PreAuthorize("hasRole('SERVIDOR')")
     @GetMapping("/{requisicaoId}/detalhes")
     public ResponseEntity<RequisicaoDetalhesDTO> verDetalhesParaAvaliacao(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID requisicaoId) throws RegraDeNegocioException {
         UUID servidorId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(requisicaoService.obterDetalhesParaAvaliacao(servidorId, requisicaoId));
     }
 
+    @PreAuthorize("hasAnyRole('DISCENTE', 'SERVIDOR')")
     @GetMapping("/{requisicaoId}/termo-responsabilidade/download")
     public ResponseEntity<Resource> downloadTermoResponsabilidade(
             @AuthenticationPrincipal Jwt jwt,
@@ -80,18 +87,21 @@ public class RequisicaoController {
 
     // ENDPOINTS DO DISCENTE
 
+    @PreAuthorize("hasRole('DISCENTE')")
     @GetMapping("/minhas")
     public ResponseEntity<List<RequisicaoDTO.Response>> listarMinhasRequisicoes(@AuthenticationPrincipal Jwt jwt) {
         UUID discenteId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(requisicaoService.listarMinhasRequisicoes(discenteId));
     }
 
+    @PreAuthorize("hasRole('DISCENTE')")
     @PatchMapping("/{requisicaoId}/enviar")
     public ResponseEntity<RequisicaoDTO.Response> enviarRequisicao(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID requisicaoId) throws RegraDeNegocioException {
         UUID discenteId = UUID.fromString(jwt.getSubject());
         return ResponseEntity.ok(requisicaoService.enviarParaAnalise(discenteId, requisicaoId));
     }
 
+    @PreAuthorize("hasRole('DISCENTE')")
     @PostMapping(value = "/{requisicaoId}/termo-responsabilidade", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<TermoResponsabilidadeDTO> uploadTermo(
             @AuthenticationPrincipal Jwt jwt,
@@ -104,6 +114,7 @@ public class RequisicaoController {
         return ResponseEntity.ok(dto);
     }
 
+    @PreAuthorize("hasRole('SERVIDOR')")
     @DeleteMapping("/{requisicaoId}")
     public ResponseEntity<Void> removerDiscenteDaViagem(
             @AuthenticationPrincipal Jwt jwt,
@@ -116,6 +127,7 @@ public class RequisicaoController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('SERVIDOR')")
     @GetMapping("/viagens/{viagemId}/documentos/download-zip")
     public ResponseEntity<byte[]> downloadDocumentosViagemZip(
             @AuthenticationPrincipal Jwt jwt,

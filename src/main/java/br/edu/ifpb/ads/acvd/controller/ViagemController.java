@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class ViagemController {
 
     private final ViagemService viagemService;
 
+    @PreAuthorize("hasRole('SERVIDOR')")
     @PostMapping
     public ResponseEntity<ViagemDTO> criarViagem(
             @AuthenticationPrincipal Jwt jwt,
@@ -31,16 +33,19 @@ public class ViagemController {
         return ResponseEntity.status(HttpStatus.CREATED).body(novaViagem);
     }
 
+    @PreAuthorize("hasAnyRole('DISCENTE', 'SERVIDOR')")
     @GetMapping
     public ResponseEntity<List<ViagemDTO>> listarTodas() {
         return ResponseEntity.ok(viagemService.listarTodas());
     }
 
+    @PreAuthorize("hasAnyRole('DISCENTE', 'SERVIDOR')")
     @GetMapping("/{id}")
     public ResponseEntity<ViagemDTO> buscarPorId(@PathVariable UUID id) {
         return ResponseEntity.ok(viagemService.buscarPorId(id));
     }
 
+    @PreAuthorize("hasRole('SERVIDOR')")
     @GetMapping("/minhas")
     public ResponseEntity<List<ViagemDTO>> listarMinhasViagens(@AuthenticationPrincipal Jwt jwt) {
         UUID servidorId = UUID.fromString(jwt.getSubject());

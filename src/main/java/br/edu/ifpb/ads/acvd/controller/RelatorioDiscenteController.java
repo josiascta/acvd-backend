@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.core.io.Resource;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID; 
@@ -16,6 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/relatorios-discentes")
 @CrossOrigin(origins = "*") 
+@PreAuthorize("hasRole('DISCENTE')")
 public class RelatorioDiscenteController {
 
     @Autowired
@@ -46,6 +48,8 @@ public class RelatorioDiscenteController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=anexo-vii.pdf")
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(pdfBytes);
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).build();
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();

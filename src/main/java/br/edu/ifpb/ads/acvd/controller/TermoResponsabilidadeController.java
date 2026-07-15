@@ -5,12 +5,14 @@ import br.edu.ifpb.ads.acvd.service.PdfTermoResponsabilidadeService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/pdf/termo-responsabilidade")
+@PreAuthorize("hasAnyRole('DISCENTE', 'SERVIDOR')")
 public class TermoResponsabilidadeController {
 
     private final PdfTermoResponsabilidadeService termoResponsabilidadeService;
@@ -30,6 +32,8 @@ public class TermoResponsabilidadeController {
                     .contentType(MediaType.APPLICATION_PDF)
                     .body(pdfBytes);
 
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).build();
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
